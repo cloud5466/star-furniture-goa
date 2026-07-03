@@ -792,12 +792,45 @@ The following business rules define how the core entities relate to one another.
 
 ---
 
-## Showroom
+## Location
 
-- A Showroom belongs to exactly one Company.
-- A Showroom may receive multiple Enquiries.
-- A Showroom may contain multiple Media Assets.
+### Purpose
 
+Represents a physical business location operated by Star Furniture Goa.
+
+### Responsibilities
+
+Stores location details, address, business hours, map information, contact details, and customer visit information.
+
+A Location may represent different business facilities such as a factory, showroom, office, or warehouse.
+
+### Relationships
+
+Belongs to the Company.
+
+May receive customer enquiries, appointments, and visits.
+
+May contain media assets, business hours, geo coordinates, and contact information.
+
+### Why It Exists
+
+Star Furniture Goa currently operates from a factory where customers may visit.
+
+The Location model allows the business to support future showrooms, offices, warehouses, or additional branches without changing the application architecture.
+
+### Future Scalability Considerations
+
+Supports:
+
+- Multiple factories
+- Multiple showrooms
+- Warehouses
+- Corporate offices
+- Branch expansion
+- Google Maps integration
+- Location-specific business hours
+- Location-specific contact information
+- Location galleries
 ---
 
 # Domain Relationship Overview

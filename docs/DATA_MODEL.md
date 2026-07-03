@@ -174,7 +174,7 @@ deletedAt, when soft deletion applies
 Purpose
 Audit fields create historical traceability.
 Reasoning
-Business content changes over time. Products may be updated, catalogues may be replaced, reviews may be hidden, and showroom details may change.
+Business content changes over time. Products may be updated, catalogues may be replaced, reviews may be hidden, and Location details may change.
 Long-Term Scalability
 Audit fields support admin workflows, CMS history, moderation, rollback, analytics, and future compliance needs.
 Consistency Benefits
@@ -279,7 +279,7 @@ ogImage, when needed
 Purpose
 SEO fields control how public content appears in search engines and social sharing.
 Reasoning
-The business depends on discoverability for furniture categories, catalogues, showroom information, and product pages.
+The business depends on discoverability for furniture categories, catalogues, Location information, and product pages.
 Long-Term Scalability
 SEO fields allow future CMS-managed metadata, local SEO, category landing pages, and catalogue search visibility.
 Consistency Benefits
@@ -316,7 +316,7 @@ deletedAt
 Purpose
 Soft deletion preserves business history while removing records from active use.
 Reasoning
-Products, enquiries, reviews, catalogues, and showroom-related data may need to be hidden without being permanently lost.
+Products, enquiries, reviews, catalogues, and Location-related data may need to be hidden without being permanently lost.
 Long-Term Scalability
 Soft deletion supports admin recovery, audit trails, reporting, and future workflow systems.
 Consistency Benefits
@@ -470,7 +470,7 @@ collectionId
 catalogueId
 mediaAssetId
 productId
-showroomId
+LocationId
 Use the Ids suffix for arrays of entity references.
 Examples:
 categoryIds
@@ -553,11 +553,185 @@ This section should not be populated until entity modeling begins.
 
 # Modeling Principles
 
-This section will define the high-level rules for designing individual entity models.
-
-It will explain how to decide whether information belongs as a field, value object, relationship, metadata, or future extension.
-
-This section will be completed before modeling the individual entities.
+1. Single Responsibility
+Purpose
+Each entity should represent one clear business concept.
+Architectural Reasoning
+An entity becomes difficult to maintain when it tries to represent multiple responsibilities. Business identity, brand identity, furniture offerings, customer intent, media, and Location information should remain clearly separated.
+Long-Term Scalability
+Single-purpose entities can grow independently as the business expands into catalogues, enquiries, quotations, appointments, CMS management, and customer accounts.
+Practical Examples
+A product should describe a furniture offering.
+A catalogue should describe a curated sales asset.
+A media asset should describe business-owned visual or document media.
+When Exceptions Are Acceptable
+Small supporting concepts may remain embedded when they do not have their own lifecycle, ownership, relationships, or reuse across the system.
+2. Separation of Business Data vs Presentation Data
+Purpose
+Entity models should describe business meaning, not page layout or visual behavior.
+Architectural Reasoning
+Business data must remain usable across the website, catalogue viewer, CMS, Location workflows, search, and future business tools. Presentation concerns change more frequently than business facts.
+Long-Term Scalability
+Separating business data from presentation data allows the same entity to appear in different customer experiences without restructuring the model.
+Practical Examples
+Product category, material, warranty, and catalogue relationships belong in the data model.
+Animation behavior, section layout, card size, and navigation placement do not belong in entity models.
+When Exceptions Are Acceptable
+Business-controlled merchandising fields such as visibility, featured state, and display order are acceptable because they represent business priority, not visual styling.
+3. Normalization vs Practical Duplication
+Purpose
+The data model should avoid unnecessary duplication while allowing limited duplication when it improves business stability or historical accuracy.
+Architectural Reasoning
+Over-normalization can make simple content difficult to manage. Over-duplication creates inconsistency. The model should balance reuse with practical business needs.
+Long-Term Scalability
+A balanced approach supports CMS growth, catalogue updates, search, and future enquiry tracking without making the model rigid.
+Practical Examples
+Materials, finishes, media assets, and categories should usually be referenced instead of duplicated.
+A historical enquiry may preserve a snapshot of selected customer-facing text when that context must remain accurate over time.
+When Exceptions Are Acceptable
+Duplication is acceptable when preserving historical context, improving search performance, supporting external exports, or protecting customer-facing records from later content changes.
+4. Reusable Value Objects
+Purpose
+Repeated structured concepts should be modeled once and reused consistently.
+Architectural Reasoning
+Shared value objects prevent every entity from defining the same structure differently.
+Long-Term Scalability
+Reusable value objects make it easier to maintain contact information, addresses, measurements, SEO metadata, social links, media references, and audit information as the project grows.
+Practical Examples
+A Location and company may both use address information.
+Products, design requests, and future quotations may all use measurements.
+When Exceptions Are Acceptable
+A value object may be simplified inside a specific entity if the entity only needs a very small subset and will not share that structure elsewhere.
+5. Entity References vs Embedded Objects
+Purpose
+The model should clearly decide when to reference another entity and when to embed a small object.
+Architectural Reasoning
+Entities with their own lifecycle, reuse, relationships, or business identity should be referenced. Small descriptive structures without independent meaning may be embedded.
+Long-Term Scalability
+This prevents large, tangled entity models and keeps relationships flexible as catalogues, collections, products, media, and enquiries grow.
+Practical Examples
+Products should reference categories, collections, media assets, materials, and finishes.
+A simple address or SEO metadata object can be embedded where appropriate.
+When Exceptions Are Acceptable
+Embedding is acceptable when the data belongs only to one parent, has no independent lifecycle, and is not reused elsewhere.
+6. Required vs Optional Fields
+Purpose
+Only business-critical fields should be required.
+Architectural Reasoning
+Making too many fields required creates friction for content entry, CMS migration, and gradual data enrichment. Making too few fields required creates incomplete and unreliable records.
+Long-Term Scalability
+Clear required fields allow the project to start simple while supporting richer content later.
+Practical Examples
+Identity, status, and audit information are usually required for primary entities.
+SEO, media, descriptions, translations, and advanced metadata may be optional depending on the entity.
+When Exceptions Are Acceptable
+A field may become required when the entity cannot be meaningful, searchable, publishable, or trustworthy without it.
+7. Immutable vs Mutable Data
+Purpose
+The model should distinguish stable identity from information that may change over time.
+Architectural Reasoning
+Some data should remain stable once created, while other data must support updates, revisions, or publishing workflows.
+Long-Term Scalability
+This supports versioning, historical tracking, rollbacks, customer enquiry context, and future CMS workflows.
+Practical Examples
+Entity identity should remain stable.
+Descriptions, catalogue files, warranty explanations, visibility, and merchandising priority may change.
+When Exceptions Are Acceptable
+Stable data may be corrected when it was originally entered incorrectly, but changes should not break relationships or historical meaning.
+8. Business Rules vs Validation Rules
+Purpose
+The data model should distinguish business meaning from input correctness.
+Architectural Reasoning
+Business rules describe how the business operates. Validation rules describe whether submitted information is acceptable.
+Long-Term Scalability
+Separating these concerns keeps the data model useful for business planning, CMS workflows, enquiry handling, and future operational systems.
+Practical Examples
+A product belonging to a category is a business rule.
+A contact number needing a valid format is a validation rule.
+When Exceptions Are Acceptable
+A validation rule may be documented near an entity when it directly protects business meaning or prevents invalid business records.
+9. Extensibility Without Breaking Existing Models
+Purpose
+Entities should allow future growth without forcing existing data to be rewritten.
+Architectural Reasoning
+The project will evolve from a website into a richer catalogue and customer experience platform. Models should anticipate growth without becoming over-engineered.
+Long-Term Scalability
+Extensible models support future catalogues, cloud media, search, filters, quotations, appointments, CMS editing, and customer accounts.
+Practical Examples
+Metadata can support future integration-specific information.
+Versioning can support future revision history without changing the entity’s stable identity.
+When Exceptions Are Acceptable
+A model should be redesigned only when the existing structure no longer represents the business truth clearly.
+10. Backward Compatibility
+Purpose
+Future changes should avoid breaking existing records, URLs, saved customer intent, or catalogue references.
+Architectural Reasoning
+Furniture catalogues, product pages, wishlists, and enquiries may remain useful long after content changes.
+Long-Term Scalability
+Backward compatibility supports long-lived content, SEO stability, shared links, historical enquiries, and future CMS migrations.
+Practical Examples
+A changed product name should not break its identity.
+An updated catalogue should not erase the meaning of earlier customer interactions.
+When Exceptions Are Acceptable
+Breaking changes are acceptable only when the business intentionally retires a concept and provides a clear migration or archival path.
+11. Consistency Across Every Entity
+Purpose
+Every entity should follow the same naming, identifier, status, date, audit, metadata, media, and relationship standards.
+Architectural Reasoning
+Consistency reduces confusion and makes the model easier to extend.
+Long-Term Scalability
+A consistent model supports future team members, CMS content managers, search systems, integrations, and documentation.
+Practical Examples
+Relationship references should consistently use singular reference names for one item and plural reference names for many items.
+Status and audit patterns should remain predictable across entities.
+When Exceptions Are Acceptable
+Exceptions are acceptable only when the business concept genuinely requires a different pattern and the reason is documented.
+12. Avoiding Data Duplication
+Purpose
+The same business fact should not be stored in multiple places unnecessarily.
+Architectural Reasoning
+Duplicated data creates disagreement over which version is correct.
+Long-Term Scalability
+Avoiding duplication keeps products, catalogues, categories, collections, media, reviews, and enquiries easier to manage as volume grows.
+Practical Examples
+A media asset should be referenced by multiple business entities instead of copied into each one.
+A material should be reused instead of described differently across many furniture items.
+When Exceptions Are Acceptable
+Duplication is acceptable for historical snapshots, search optimization, reporting summaries, or customer-facing records that must preserve what was true at a specific time.
+13. Future CMS Compatibility
+Purpose
+Entity models should be structured so content can later be managed through a CMS without redesigning the data model.
+Architectural Reasoning
+The business may eventually need non-technical editing of products, catalogues, Location, reviews, SEO metadata, and media.
+Long-Term Scalability
+CMS-compatible modeling supports publishing workflows, drafts, approvals, translations, media libraries, versioning, and content scheduling.
+Practical Examples
+Entities should support status, visibility, display order, SEO metadata, media references, localization, and audit fields where relevant.
+When Exceptions Are Acceptable
+A simple static value may remain outside CMS control when it is unlikely to change and has no business editing requirement.
+14. Cloud Storage Compatibility
+Purpose
+The model should support media stored outside the project without changing business entities.
+Architectural Reasoning
+Large catalogues, product images, videos, and future virtual tours should be treated as managed business assets rather than local files.
+Long-Term Scalability
+Cloud-compatible media references support PDF catalogue viewers, optimized images, large media libraries, future virtual tours, and storage provider changes.
+Practical Examples
+A catalogue should reference its media assets instead of depending on a fixed file location.
+A product should reference images through media assets that can later point to optimized or cloud-hosted versions.
+When Exceptions Are Acceptable
+Small static brand assets may remain simple when they are unlikely to change and do not require media management.
+15. Search Optimization Considerations
+Purpose
+Entity models should support future search and filtering without turning search into a separate business entity.
+Architectural Reasoning
+Search depends on clean, intentional business data. Products, categories, collections, catalogues, materials, finishes, room types, and warranty information should be modeled in ways that make discovery reliable.
+Long-Term Scalability
+Search-ready modeling supports keyword search, filters, related content, recommendations, AI-assisted discovery, and SEO growth.
+Practical Examples
+Customer-facing names, descriptions, tags, category references, collection references, materials, finishes, and room types should be structured clearly enough to support discovery.
+When Exceptions Are Acceptable
+Search-specific summaries or indexed text may be introduced later when needed for performance or improved discovery, but they should not replace the source business data.
 
 ---
 
@@ -619,7 +793,7 @@ The planned modeling order is:
 8. Catalogue
 9. Wishlist
 10. Review
-11. Showroom
+11. Location
 12. Enquiry
 13. Design Your Space Request
 
@@ -632,3 +806,7 @@ This section will summarize all entity relationships after every entity has been
 It will provide a high-level overview of one-to-one, one-to-many, and many-to-many relationships across the application.
 
 This section will be completed once the entity modeling phase is finished.
+
+
+
+
