@@ -4659,6 +4659,276 @@ Future entities such as Customer Account, Enquiry, Quotation, Analytics Event, R
   "deletedAt": null
 }
 ```
+
+## Review Entity Model
+
+### 1. Purpose
+
+The Review entity represents customer feedback about Star Furniture Goa.
+
+A Review captures customer experience, trust, satisfaction, and testimonial value. It may be associated with the Company, a Product, a completed Service Offering, a Location, or a future Completed Project.
+
+A Review must not own Product, Company, Customer, Service, Location, or Project data.
+
+It should reference those entities where appropriate.
+
+---
+
+### 2. Responsibilities
+
+The Review entity is responsible for:
+
+- Capturing customer feedback.
+- Capturing star ratings.
+- Capturing written review content.
+- Supporting reviewer display names.
+- Supporting verification status.
+- Supporting review moderation.
+- Supporting featured testimonials.
+- Supporting review replies.
+- Supporting review images through Media References.
+- Supporting Product-level reviews.
+- Supporting Company-level reviews.
+- Supporting Service Offering reviews.
+- Supporting future Completed Project reviews.
+- Supporting soft deletion and historical preservation.
+
+The Review entity is not responsible for:
+
+- Owning Product data.
+- Owning Company data.
+- Owning Customer Account data.
+- Owning Service Offering data.
+- Owning Completed Project data.
+- Storing private customer details.
+- Replacing Enquiry or Customer Account records.
+- Managing review display layout.
+- Managing external review platform integrations directly.
+
+---
+
+### 3. Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the Review. | Must be globally unique and immutable. |
+| `companyId` | UUID String | Required | Reference to the Company the Review belongs to. | Must reference one valid Company. |
+| `reviewTargetType` | Controlled String | Required | Defines what the Review is primarily associated with. | Suggested values: `company`, `product`, `serviceOffering`, `location`, `completedProject`. |
+| `reviewerDisplayName` | String | Required | Public display name of the reviewer. | Must be customer-safe. Should not expose private contact details. |
+| `ratingValue` | Number | Required | Star rating value given by the reviewer. | Must be within the defined rating scale. |
+| `ratingScale` | Number | Required | Maximum rating scale used for the Review. | Recommended value: `5`. Must be greater than `ratingValue` or equal to it. |
+| `reviewText` | String | Required | Written customer feedback. | Must contain meaningful review content. Should be suitable for public display after moderation. |
+| `verificationStatus` | Controlled String | Required | Indicates whether the Review has been verified. | Suggested values: `unverified`, `verified`, `imported`, `pendingVerification`. |
+| `moderationStatus` | Controlled String | Required | Indicates the moderation state of the Review. | Suggested values: `pending`, `approved`, `rejected`, `flagged`, `hidden`. |
+| `status` | Controlled String | Required | Lifecycle status of the Review. | Suggested values: `active`, `inactive`, `draft`, `archived`, `deleted`. |
+| `createdAt` | ISO 8601 Date String | Required | Date and time when the Review was created. | Must use ISO 8601 format. |
+| `updatedAt` | ISO 8601 Date String | Required | Date and time when the Review was last updated. | Must use ISO 8601 format and update whenever Review data changes. |
+
+---
+
+### 4. Optional Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `publicId` | String | Optional | Customer-safe identifier for public references. | Must not expose internal sequencing or sensitive data. |
+| `title` | String | Optional | Short review headline. | Should summarize the review without replacing `reviewText`. |
+| `reviewerLocation` | String | Optional | Public location label for the reviewer, such as city or area. | Must not include full address or private location details. |
+| `customerAccountId` | UUID String | Optional | Future reference to a registered Customer Account. | Must reference a valid Customer Account when that entity exists. |
+| `productId` | UUID String | Optional | Reference to the Product being reviewed. | Required when `reviewTargetType` is `product`. |
+| `productVariantId` | UUID String | Optional | Reference to a Product Variant being reviewed. | Must belong to the referenced Product when provided. |
+| `serviceOfferingId` | UUID String | Optional | Reference to the Service Offering being reviewed. | Required when `reviewTargetType` is `serviceOffering`. |
+| `locationId` | UUID String | Optional | Reference to the Location associated with the Review. | Required when `reviewTargetType` is `location`. |
+| `completedProjectId` | UUID String | Optional | Future reference to a Completed Project. | Required when `reviewTargetType` is `completedProject`. |
+| `enquiryId` | UUID String | Optional | Reference to an Enquiry related to the customer experience. | Must reference a valid Enquiry when used. |
+| `customerSegmentId` | UUID String | Optional | Reference to the customer segment if known. | Must reference a valid Customer Segment when used. |
+| `sourcePlatform` | Controlled String | Optional | Platform or channel where the Review originated. | Suggested values: `website`, `google`, `instagram`, `whatsapp`, `showroom`, `imported`, `manual`. |
+| `sourceUrl` | String | Optional | Link to the original external review source. | Must be a valid URL when present. |
+| `reviewDate` | ISO 8601 Date String | Optional | Date when the customer gave the Review. | Must use ISO 8601 format. |
+| `verifiedAt` | ISO 8601 Date String | Optional | Date and time when the Review was verified. | Required when `verificationStatus` is `verified`. |
+| `verificationMethod` | Controlled String | Optional | How the Review was verified. | Suggested values: `customerAccount`, `enquiryMatch`, `manualConfirmation`, `externalPlatform`, `purchaseRecord`, `other`. |
+| `moderatedAt` | ISO 8601 Date String | Optional | Date and time when moderation was completed. | Must use ISO 8601 format when present. |
+| `moderatedByUserId` | UUID String | Optional | Future reference to the admin or staff user who moderated the Review. | Must reference a valid future user record when introduced. |
+| `moderationNotes` | String | Optional | Internal moderation notes. | Must not be shown publicly unless explicitly intended. |
+| `reviewReplies` | Array of Review Reply Objects | Optional | Business replies to the Review. | Replies belong inside Review unless future reply workflows require a standalone entity. |
+| `mediaReferences` | Array of Media Reference Objects | Optional | Review images, testimonial photos, or supporting media. | Must use Media Reference value objects instead of direct file paths. |
+| `testimonialDisplayText` | String | Optional | Edited short testimonial excerpt for featured display. | Must preserve the meaning of the original review and should not misrepresent the customer. |
+| `ratingBreakdown` | Object | Optional | Optional structured ratings for quality, service, delivery, or installation. | Must use consistent rating scales if used. |
+| `helpfulCount` | Number | Optional | Future count of customers who marked the Review as helpful. | Must be a non-negative number. |
+| `reportedCount` | Number | Optional | Future count of reports or flags. | Must be a non-negative number. |
+| `visibilitySettings` | Visibility Settings Object | Optional | Controls whether the Review is visible, featured, or ordered. | Must use the shared Visibility Settings value object. |
+| `localizations` | Array of Localization Text Objects | Optional | Future translations for public review content or replies. | Must follow the approved localization strategy. |
+| `metadata` | Object | Optional | Non-critical extensibility data. | Must not contain Product data, Company data, private customer information, or moderation-critical fields. |
+| `isDeleted` | Boolean | Optional | Soft deletion flag. | Must default to `false` when used. |
+| `deletedAt` | ISO 8601 Date String | Optional | Date and time when the Review was soft deleted. | Required only when `isDeleted` is `true`. |
+
+---
+
+### Review Reply Object
+
+Review Reply is not a standalone entity at this stage.
+
+It belongs inside Review because it exists only as a business response to a specific Review.
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the Review Reply. | Must be unique within the Review. |
+| `replyText` | String | Required | Public reply content from the business. | Must be professional, customer-safe, and relevant to the Review. |
+| `repliedAt` | ISO 8601 Date String | Required | Date and time when the reply was added. | Must use ISO 8601 format. |
+| `repliedByUserId` | UUID String | Optional | Future reference to the staff or admin user who replied. | Must reference a valid future user record when introduced. |
+| `replyStatus` | Controlled String | Optional | Lifecycle state of the reply. | Suggested values: `active`, `hidden`, `archived`. |
+
+---
+
+### 5. Relationships
+
+- Review belongs to one Company through `companyId`.
+- Review may reference a Product through `productId`.
+- Review may reference a Product Variant through `productVariantId`.
+- Review may reference a Service Offering through `serviceOfferingId`.
+- Review may reference a Location through `locationId`.
+- Review may reference a future Completed Project through `completedProjectId`.
+- Review may reference a future Customer Account through `customerAccountId`.
+- Review may reference an Enquiry through `enquiryId`.
+- Review may reference a Customer Segment through `customerSegmentId`.
+- Review references images or testimonial media through `mediaReferences`.
+
+Review does not store full Product, Company, Customer Account, Service Offering, Location, or Completed Project objects.
+
+---
+
+### 6. Business Rules
+
+- A Review must belong to one Company.
+- A Review must own only review-specific information.
+- A Review must not own Product, Company, Customer, Service Offering, Location, or Completed Project data.
+- A Review must use references for related business entities.
+- `reviewTargetType` must determine which target reference is required.
+- If `reviewTargetType` is `company`, no additional target reference is required beyond `companyId`.
+- If `reviewTargetType` is `product`, `productId` must be present.
+- If `reviewTargetType` is `serviceOffering`, `serviceOfferingId` must be present.
+- If `reviewTargetType` is `location`, `locationId` must be present.
+- If `reviewTargetType` is `completedProject`, `completedProjectId` must be present.
+- Customer private information must not be embedded in Review.
+- `reviewerDisplayName` is public display content, not a full customer identity record.
+- Public Reviews should be shown only when `moderationStatus` is `approved` and `status` is `active`.
+- Featured testimonials should be controlled through Visibility Settings.
+- Review media must use Media References instead of direct file paths.
+- Review replies must remain professional and must not expose private customer or business information.
+- Soft-deleted Reviews must not appear publicly unless restored.
+- Rejected or hidden Reviews should remain preserved for moderation history unless permanently removed by policy.
+
+---
+
+### 7. Shared Value Objects Used
+
+- Media Reference
+- Visibility Settings
+- Localization Text
+
+Review intentionally does not require SEO Metadata by default because individual reviews are trust content rather than standalone public landing pages.
+
+SEO value should normally be handled by the Product, Company, Location, or future Completed Project page that displays the Review.
+
+---
+
+### 8. Future Expansion
+
+The Review model supports future growth without redesign by allowing:
+
+- Product-specific reviews.
+- Company-level testimonials.
+- Service Offering reviews.
+- Location-specific reviews.
+- Future Completed Project reviews.
+- Future Customer Account references.
+- Review verification workflows.
+- Review moderation workflows.
+- Business replies.
+- Review image galleries.
+- Featured testimonials.
+- Imported reviews from external platforms.
+- Review analytics.
+- Helpful votes and reporting.
+- Review sentiment analysis.
+- Future CMS moderation workflows.
+
+Future entities such as Customer Account, Completed Project, Staff User, Moderation Workflow, Review Import Source, Analytics Event, and Sentiment Analysis Record can reference Review without changing the core Review model.
+
+---
+
+### 9. Example JSON
+
+```json
+{
+  "id": "5a7d9c21-8f43-4a62-9e18-6b2f4c7d9103",
+  "publicId": "review-sfg-001",
+  "companyId": "2a7c91e5-4d8f-4c21-9f62-6e39d8a4f101",
+  "reviewTargetType": "product",
+  "productId": "product-verona-sliding-wardrobe",
+  "productVariantId": "variant-plywood-white-matte-3-door-layout",
+  "serviceOfferingId": null,
+  "locationId": null,
+  "completedProjectId": null,
+  "enquiryId": "enquiry-sfg-wardrobe-001",
+  "customerAccountId": null,
+  "customerSegmentId": "customer-segment-homeowners",
+  "reviewerDisplayName": "A. Naik",
+  "reviewerLocation": "Margao, Goa",
+  "title": "Excellent custom wardrobe work",
+  "ratingValue": 5,
+  "ratingScale": 5,
+  "reviewText": "The wardrobe was finished beautifully and the team understood our space requirements very well. The quality feels strong and the installation was handled professionally.",
+  "sourcePlatform": "website",
+  "sourceUrl": null,
+  "reviewDate": "2026-07-11T00:00:00+05:30",
+  "verificationStatus": "verified",
+  "verifiedAt": "2026-07-11T10:30:00+05:30",
+  "verificationMethod": "enquiryMatch",
+  "moderationStatus": "approved",
+  "moderatedAt": "2026-07-11T11:00:00+05:30",
+  "moderatedByUserId": null,
+  "moderationNotes": "Approved for public testimonial use.",
+  "reviewReplies": [
+    {
+      "id": "review-reply-001",
+      "replyText": "Thank you for trusting Star Furniture Goa. We are glad the wardrobe suited your space and expectations.",
+      "repliedAt": "2026-07-11T12:00:00+05:30",
+      "repliedByUserId": null,
+      "replyStatus": "active"
+    }
+  ],
+  "mediaReferences": [
+    {
+      "mediaAssetId": "media-review-wardrobe-installation-001",
+      "mediaType": "image",
+      "altText": "Installed custom wardrobe shared with customer review",
+      "displayOrder": 1,
+      "isPrimary": true
+    }
+  ],
+  "testimonialDisplayText": "The wardrobe was finished beautifully and the team understood our space requirements very well.",
+  "ratingBreakdown": {
+    "quality": 5,
+    "service": 5,
+    "installation": 5
+  },
+  "helpfulCount": 0,
+  "reportedCount": 0,
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "visible"
+  },
+  "localizations": [],
+  "metadata": {},
+  "status": "active",
+  "createdAt": "2026-07-11T00:00:00+05:30",
+  "updatedAt": "2026-07-11T12:00:00+05:30",
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
 ---
 
 # Relationship Summary
