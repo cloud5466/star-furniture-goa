@@ -797,6 +797,1291 @@ The planned modeling order is:
 12. Enquiry
 13. Design Your Space Request
 
+Entity Model: Company
+Purpose
+The Company entity represents Star Furniture Goa as the root business object of the application.
+It stores the stable business identity, operational context, contact ownership, business history, and primary ownership relationships from which the rest of the data model grows.
+Every major business entity belongs to the Company either directly or indirectly.
+Responsibilities
+The Company entity is responsible for:
+Representing the operating business behind Star Furniture Goa.
+Owning the primary Brand relationship.
+Owning business-level contact and address information.
+Owning Locations, including factory, showroom, office, warehouse, or future branches.
+Owning Service Offerings and Warranty Policies.
+Establishing root ownership for Categories, Collections, Products, Catalogues, Reviews, and Enquiries.
+Providing the root identity for future CMS, analytics, search, and customer experience workflows.
+Preserving stable business information separately from visual brand identity.
+Required Fields
+Name	Data Type	Required or Optional	Description	Validation Rules
+id	UUID String	Required	Internal stable identifier for the Company.	Must be a valid UUID. Must never change after creation.
+name	String	Required	Public business name used to identify the company.	Must not be empty. Should be human-readable. Recommended length: 2-120 characters.
+slug	String	Required	Public URL-safe identifier for the company.	Must be lowercase, hyphen-separated, and stable. Should not contain spaces or special characters.
+description	String	Required	Customer-facing explanation of what the company does.	Must not be empty. Should describe the company clearly and professionally.
+businessRoles	Array of Controlled Strings	Required	Defines the operating roles of the company.	Must contain at least one value. Recommended values include manufacturer, wholesaler, retailer, serviceProvider.
+status	Controlled String	Required	Lifecycle state of the company record.	Must use a controlled status value such as active, inactive, draft, or archived.
+primaryBrandId	UUID String	Required	Reference to the primary Brand owned by the Company.	Must reference one valid Brand. A Company must have exactly one primary Brand.
+primaryContactInformation	Contact Information	Required	Primary business contact details.	Must contain at least one valid customer contact method. WhatsApp or phone is strongly recommended.
+primaryAddress	Address	Required	Primary business address or registered operating address.	Must include enough information to identify the business location. City, state, and country are required.
+createdAt	ISO 8601 Date String	Required	Timestamp when the Company record was created.	Must be a valid ISO 8601 timestamp.
+updatedAt	ISO 8601 Date String	Required	Timestamp when the Company record was last updated.	Must be a valid ISO 8601 timestamp. Must not be earlier than createdAt.
+
+Optional Fields
+Name	Data Type	Description	Validation Rules
+publicId	String	Safe public-facing identifier if the Company needs to be referenced externally.	Must be stable and unique if used.
+legalName	String	Registered legal name of the business, if different from the public name.	Should not duplicate name unless legally required.
+foundedYear	Number	Year the business began operations.	Must be a valid four-digit year. Must not be in the future.
+businessHistory	String	Business history used for credibility and trust.	Should be customer-readable and factually accurate.
+seoMetadata	SEO Metadata	Search and social metadata for the company’s main public presence.	Should follow the SEO Metadata shared value object.
+socialLinks	Array of Social Links	Official company-level social media links.	Each link must include a valid platform and URL.
+mediaReferences	Array of Media Reference	Company-related media such as office, factory, proprietor, or brand imagery.	Must reference valid Media Assets.
+locationIds	Array of UUID Strings	References to Locations owned by the Company.	Each value must reference a valid Location.
+primaryLocationId	UUID String	Reference to the primary physical Location of the Company.	Must reference one valid Location when provided. Should not rely on locationIds order.
+serviceOfferingIds	Array of UUID Strings	References to Service Offerings owned by the Company.	Each value must reference a valid Service Offering.
+warrantyPolicyIds	Array of UUID Strings	References to Warranty Policies owned by the Company.	Each value must reference a valid Warranty Policy.
+businessHours	Array of Business Hours	General operating hours if they apply company-wide.	Should only be used when hours are not better owned by a specific Location.
+geoCoordinates	Geo Coordinates	Coordinates for the primary business location if company-level mapping is needed.	Should only be used when coordinates are not better owned by a specific Location.
+visibilitySettings	Visibility Settings	Controls whether company information is visible or featured in business-controlled contexts.	Should not be used for page layout decisions.
+localizations	Array of Localization Text	Translated customer-facing company content.	Locale values should follow the approved localization strategy.
+metadata	Object	Flexible non-primary information for future integrations or migration support.	Must not contain business-critical fields, relationships, SEO data, contact information, or media references.
+isDeleted	Boolean	Soft deletion flag.	Should be false for active company records.
+deletedAt	ISO 8601 Date String	Timestamp for soft deletion.	Required only when isDeleted is true.
+
+Relationships
+Brand
+A Company owns exactly one primary Brand.
+Relationship field:
+primaryBrandId
+The Company stores business identity. The Brand stores market-facing identity such as logo, colors, typography, tone, positioning, and tagline.
+Locations
+A Company may own one or more Locations.
+Relationship fields:
+locationIds
+primaryLocationId
+Locations may represent:
+Factory
+Showroom
+Office
+Warehouse
+Future branch
+Location-specific address, business hours, geo coordinates, and contact details should belong to Location when they differ from the company-level information.
+Service Offerings
+A Company may offer many Service Offerings.
+Relationship field:
+serviceOfferingIds
+Service Offerings describe business capabilities such as consultation, design support, manufacturing, delivery, and installation.
+Warranty Policies
+A Company may own many Warranty Policies.
+Relationship field:
+warrantyPolicyIds
+Warranty Policies should remain separate because they may evolve, be versioned, and apply differently across products, materials, or product variants.
+Categories
+A Company owns many Categories.
+Relationship direction:
+Each Category should reference the Company through companyId.
+The Company should not store categoryIds because this relationship may grow over time.
+Collections
+A Company owns many Collections.
+Relationship direction:
+Each Collection should reference the Company through companyId.
+The Company should not store collectionIds because this relationship may grow over time.
+Products
+A Company owns many Products.
+Relationship direction:
+Each Product should reference the Company through companyId.
+The Company should not store productIds because this relationship may grow into a large dataset.
+Catalogues
+A Company owns many Catalogues.
+Relationship direction:
+Each Catalogue should reference the Company through companyId.
+The Company should not store catalogueIds because catalogues may expand and version over time.
+Reviews
+A Company may have many Reviews.
+Relationship direction:
+Each Review should reference the Company through companyId.
+The Company should not store reviewIds because review volume may grow over time.
+Enquiries
+A Company may receive many Enquiries.
+Relationship direction:
+Each Enquiry should reference the Company through companyId.
+The Company should not store enquiryIds because enquiries can grow continuously and should not make the Company record oversized.
+Business Rules
+A Company must have exactly one primary Brand.
+A Company must have a stable internal id.
+A Company must have a public business name.
+A Company must have a valid status.
+A Company must define at least one businessRoles value.
+A Company must not duplicate Brand responsibilities such as logo, tagline, brand colors, typography, tone of voice, or visual identity.
+A Company may own multiple Locations.
+A Company may define one primaryLocationId when multiple Locations exist.
+A Company must have at least one customer contact method through primaryContactInformation.
+Company-level contact information should represent general business contact, not location-specific contact when separate Location contact exists.
+Company-level address should represent the primary or registered business address.
+Location-specific address information should not be duplicated at the Company level unless it is also the primary business address.
+Company relationships should use reference fields, not embedded full entity objects.
+Company should only store small, stable direct references.
+Large child collections such as Categories, Collections, Products, Catalogues, Reviews, and Enquiries should reference Company through companyId.
+The Company should not contain product, catalogue, review, or enquiry details directly.
+Company-level businessHours should only be used when the hours apply globally to the business.
+Company-level geoCoordinates should only be used when coordinates apply globally or represent the primary business location.
+metadata must not become a hidden place for core business data.
+Soft deletion should preserve Company history and must not automatically erase related business entities.
+Company status must control whether the business record is considered active, inactive, draft, or archived.
+Shared Value Objects Used
+The Company entity uses the following Shared Value Objects:
+Address
+Contact Information
+SEO Metadata
+Social Links
+Media Reference
+Business Hours
+Geo Coordinates
+Visibility Settings
+Localization Text
+These value objects should be embedded only where they describe the Company directly.
+Future Expansion
+The Company entity can evolve without breaking compatibility by adding optional fields or relationships rather than changing existing required fields.
+Future expansion may include:
+Multiple brands or sub-brands.
+Multiple Locations across Goa or beyond.
+Business certifications and awards.
+Team or proprietor profiles.
+Company-level media galleries.
+CMS-managed company content.
+Multilingual company descriptions.
+Business verification details.
+Company-level analytics metadata.
+Future customer account ownership.
+Future appointment and quotation ownership.
+Stable fields such as id, name, slug, and primaryBrandId should remain backward compatible.
+New business capabilities should be added through references to separate entities instead of expanding Company into an oversized record.
+Large child relationships should continue to be modeled from the child entity back to Company through companyId.
+
+Example JSON
+{
+  "id": "8e2b5c4a-4f6d-4f91-9f9e-2d7c2f36b601",
+  "publicId": "sfg-company",
+  "name": "Star Furniture Goa",
+  "slug": "star-furniture-goa",
+  "description": "Star Furniture Goa designs and manufactures custom engineered wood and plywood furniture for homes, offices, and commercial spaces.",
+  "businessRoles": ["manufacturer", "wholesaler", "retailer", "serviceProvider"],
+  "status": "active",
+  "primaryBrandId": "f2a3d3d1-4b87-4ef2-9a21-6d5c9e6a1201",
+  "primaryContactInformation": {
+    "phoneNumber": "+91 9876543210",
+    "whatsappNumber": "+91 9876543210",
+    "email": "info@starfurnituregoa.com",
+    "website": "https://starfurnituregoa.com",
+    "preferredContactMethod": "whatsapp"
+  },
+  "primaryAddress": {
+    "line1": "Star Furniture Goa",
+    "line2": "Goa",
+    "landmark": "",
+    "city": "Goa",
+    "state": "Goa",
+    "postalCode": "",
+    "country": "India",
+    "formattedAddress": "Star Furniture Goa, Goa, India"
+  },
+  "foundedYear": 2006,
+  "businessHistory": "Proudly serving customers since 2006 with custom furniture solutions focused on quality, durability, and craftsmanship.",
+  "seoMetadata": {
+    "seoTitle": "Star Furniture Goa | Custom Furniture Manufacturer in Goa",
+    "seoDescription": "Star Furniture Goa manufactures premium engineered wood and plywood furniture for homes, offices, and commercial spaces.",
+    "canonicalUrl": "https://starfurnituregoa.com",
+    "ogTitle": "Star Furniture Goa",
+    "ogDescription": "Custom furniture designed and manufactured in Goa.",
+    "ogImageId": "3c7d8f11-30d5-46d5-9ef1-3f3c5c5a9010",
+    "keywords": ["custom furniture goa", "engineered wood furniture", "plywood furniture", "wardrobes goa"]
+  },
+  "socialLinks": [
+    {
+      "platform": "instagram",
+      "url": "https://instagram.com/starfurnituregoa",
+      "handle": "starfurnituregoa",
+      "isVisible": true,
+      "displayOrder": 1
+    }
+  ],
+  "locationIds": ["2f6f4f90-6f36-4ed0-9987-365d0e9e9012"],
+  "primaryLocationId": "2f6f4f90-6f36-4ed0-9987-365d0e9e9012",
+  "serviceOfferingIds": [
+    "5d8c65b7-48e6-46f6-a4b4-b3a76f2b0191",
+    "a49d86a2-7b82-47d1-8947-282671726901"
+  ],
+  "warrantyPolicyIds": [
+    "e0f89e62-cc5f-4c41-b9f1-f79d2c27a801"
+  ],
+  "mediaReferences": [
+    {
+      "mediaAssetId": "3c7d8f11-30d5-46d5-9ef1-3f3c5c5a9010",
+      "role": "companyProfile",
+      "altText": "Star Furniture Goa company profile image",
+      "caption": "Star Furniture Goa",
+      "displayOrder": 1,
+      "isFeatured": true
+    }
+  ],
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "published"
+  },
+  "createdAt": "2026-07-03T00:00:00+05:30",
+  "updatedAt": "2026-07-03T00:00:00+05:30",
+  "metadata": {
+    "source": "initialDataModel"
+  },
+  "isDeleted": false,
+  "deletedAt": null
+}
+
+
+# Entity Model: Brand
+
+## Purpose
+
+The Brand entity represents the public identity, visual language, and customer-facing personality of Star Furniture Goa.
+
+The Company owns the business.  
+The Brand defines how that business is presented to customers.
+
+The Brand should communicate premium positioning, trust, craftsmanship, elegance, and consistency across customer-facing experiences.
+
+---
+
+## Responsibilities
+
+The Brand entity is responsible for:
+
+- Representing the customer-facing identity of Star Furniture Goa.
+- Owning the brand name, tagline, positioning, and tone of voice.
+- Owning visual identity direction such as logo, colors, typography, and visual style.
+- Supporting consistent presentation across products, catalogues, collections, reviews, media, and marketing content.
+- Separating brand identity from operational company information.
+- Supporting future brand evolution, sub-brands, campaign branding, or collection-specific branding without changing Company data.
+
+---
+
+## Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---:|---|---|
+| `id` | UUID String | Required | Internal stable identifier for the Brand. | Must be a valid UUID. Must never change after creation. |
+| `companyId` | UUID String | Required | Reference to the Company that owns the Brand. | Must reference one valid Company. |
+| `name` | String | Required | Public brand name shown to customers. | Must not be empty. Recommended length: 2-120 characters. |
+| `slug` | String | Required | Public URL-safe identifier for the Brand. | Must be lowercase, hyphen-separated, and stable. Should not contain spaces or special characters. |
+| `description` | String | Required | Customer-facing description of the Brand identity and positioning. | Must not be empty. Should describe the brand clearly and professionally. |
+| `tagline` | String | Required | Primary brand tagline used in customer-facing communication. | Must not be empty. Should be concise and memorable. |
+| `positioningStatement` | String | Required | Defines how the Brand should be perceived by customers. | Must communicate the brand’s premium, trustworthy, and furniture-focused positioning. |
+| `toneOfVoice` | Array of Controlled Strings | Required | Defines the communication personality of the Brand. | Must contain at least one value. Recommended values include `premium`, `minimal`, `trustworthy`, `elegant`, `professional`. |
+| `logoMediaReference` | Media Reference | Required | Reference to the primary Brand logo media asset. | Must reference a valid Media Asset. Role should clearly identify the asset as the primary logo. |
+| `brandColors` | Object | Required | Defines the core brand color direction. | Must include at least primary, secondary, and accent color values. Colors should be valid color values. |
+| `typographyDirection` | Object | Required | Defines the approved typography direction for the Brand. | Must include customer-facing font direction for headings and body text. |
+| `status` | Controlled String | Required | Lifecycle state of the Brand record. | Must use a controlled status value such as `active`, `inactive`, `draft`, or `archived`. |
+| `createdAt` | ISO 8601 Date String | Required | Timestamp when the Brand record was created. | Must be a valid ISO 8601 timestamp. |
+| `updatedAt` | ISO 8601 Date String | Required | Timestamp when the Brand record was last updated. | Must be a valid ISO 8601 timestamp. Must not be earlier than `createdAt`. |
+
+---
+
+## Optional Fields
+
+| Name | Data Type | Description | Validation Rules |
+|---|---|---|---|
+| `publicId` | String | Safe public-facing identifier if the Brand needs to be referenced externally. | Must be stable and unique if used. |
+| `shortName` | String | Shortened brand name for compact customer-facing contexts. | Should not conflict with the full brand name. |
+| `alternateNames` | Array of Strings | Other approved public names or naming variations. | Should only include approved brand references. |
+| `brandStory` | String | Customer-facing story that explains the Brand’s background, values, or promise. | Should be factual, professional, and aligned with Company history. |
+| `brandValues` | Array of Strings | Core values communicated by the Brand. | Should not duplicate operational services or warranty details. |
+| `brandPersonality` | Array of Controlled Strings | Describes the emotional character of the Brand. | Recommended values include `premium`, `warm`, `minimal`, `credible`, `craftsmanshipFocused`. |
+| `visualStyleKeywords` | Array of Strings | Keywords describing the visual style of the Brand. | Should describe visual direction, not page layout. |
+| `secondaryTaglines` | Array of Strings | Additional approved taglines for campaigns or supporting content. | Should not replace the primary `tagline`. |
+| `iconMediaReference` | Media Reference | Reference to a simplified icon, mark, or favicon-style asset. | Must reference a valid Media Asset if provided. |
+| `mediaReferences` | Array of Media Reference | Brand-related media such as logo variations, proprietor imagery, brand visuals, or campaign assets. | Must reference valid Media Assets. |
+| `socialLinks` | Array of Social Links | Official brand-level social media links. | Each link must include a valid platform and URL. |
+| `seoMetadata` | SEO Metadata | Search and social metadata for the Brand’s public presence. | Should follow the SEO Metadata shared value object. |
+| `visibilitySettings` | Visibility Settings | Controls whether Brand content is visible or featured in business-controlled contexts. | Should not be used for page layout decisions. |
+| `localizations` | Array of Localization Text | Translated customer-facing Brand content. | Locale values should follow the approved localization strategy. |
+| `parentBrandId` | UUID String | Reference to a parent Brand if future sub-brands or campaign brands are introduced. | Must reference a valid Brand when provided. Should not be used for the primary Brand unless sub-branding exists. |
+| `metadata` | Object | Flexible non-primary information for future integrations, migration support, or brand tooling. | Must not contain business-critical fields, operational company data, contact information, or addresses. |
+| `isDeleted` | Boolean | Soft deletion flag. | Should be `false` for active Brand records. |
+| `deletedAt` | ISO 8601 Date String | Timestamp for soft deletion. | Required only when `isDeleted` is `true`. |
+
+---
+
+## Relationships
+
+### Company
+
+A Brand belongs to exactly one Company.
+
+Relationship field:
+
+- `companyId`
+
+The Company owns the business identity, legal identity, locations, services, and operational information.  
+The Brand owns the customer-facing identity, visual language, tone, and market positioning.
+
+The Company may reference the Brand through `primaryBrandId`.
+
+---
+
+### Parent Brand
+
+A Brand may optionally reference another Brand as its parent.
+
+Relationship field:
+
+- `parentBrandId`
+
+This is reserved for future sub-brands, campaign brands, collection-specific branding, or showroom-specific branding.
+
+The primary Star Furniture Goa Brand should not require a parent Brand.
+
+---
+
+### Media Assets
+
+A Brand may reference multiple Media Assets.
+
+Relationship fields:
+
+- `logoMediaReference`
+- `iconMediaReference`
+- `mediaReferences`
+
+Brand media may include logos, marks, icons, campaign visuals, brand photography, proprietor imagery, and future brand guideline assets.
+
+The Brand should reference Media Assets through Media References instead of duplicating file paths.
+
+---
+
+### Collections
+
+A Brand may influence Collections.
+
+Relationship direction:
+
+- Collections may reference `brandId` if they require brand-specific positioning or presentation.
+
+The Brand should not store `collectionIds` because collections may grow over time and should own their relationship back to Brand when needed.
+
+---
+
+### Catalogues
+
+A Brand may influence Catalogues.
+
+Relationship direction:
+
+- Catalogues may reference `brandId` if the catalogue is tied to a specific brand identity, campaign, or visual direction.
+
+The Brand should not store `catalogueIds` because catalogues may expand and version over time.
+
+---
+
+### Media Asset Ownership
+
+A Brand may be associated with Media Assets used for logo identity, brand visuals, and customer-facing presentation.
+
+Relationship direction:
+
+- Media Assets may reference `brandId` when the asset primarily belongs to the Brand.
+
+---
+
+## Business Rules
+
+- A Brand must belong to exactly one Company.
+- A Brand must have a stable internal `id`.
+- A Brand must have a public `name`.
+- A Brand must have a valid `slug`.
+- A Brand must have one primary `tagline`.
+- A Brand must have one primary logo through `logoMediaReference`.
+- A Brand must define its customer-facing positioning through `positioningStatement`.
+- A Brand must define its communication style through `toneOfVoice`.
+- A Brand must define core visual identity through `brandColors` and `typographyDirection`.
+- A Brand must not contain Company responsibilities such as legal identity, addresses, business hours, services, warranties, or operational contact details.
+- A Brand must not contain Product, Catalogue, Review, or Enquiry details directly.
+- A Brand should use Media References instead of raw media paths.
+- Brand-level social links should represent public brand presence, not operational contact channels.
+- Brand visual identity should remain presentation-guiding but not page-layout-specific.
+- Large child relationships such as Collections, Catalogues, or Media Assets should reference Brand from the child entity when needed.
+- `metadata` must not become a hidden place for core brand identity data.
+- Soft deletion should preserve Brand history and must not automatically erase Company data or related business entities.
+- Brand status must control whether the Brand record is considered active, inactive, draft, or archived.
+
+---
+
+## Shared Value Objects Used
+
+The Brand entity uses the following Shared Value Objects:
+
+- Media Reference
+- SEO Metadata
+- Social Links
+- Visibility Settings
+- Localization Text
+
+These value objects should be embedded only where they describe the Brand directly.
+
+The Brand must not use Address, Contact Information, Business Hours, or Geo Coordinates because those belong to Company, Location, Enquiry, or customer intent contexts.
+
+---
+
+## Future Expansion
+
+The Brand entity can evolve without breaking compatibility by adding optional fields or relationships rather than changing existing required fields.
+
+Future expansion may include:
+
+- Sub-brands.
+- Campaign-specific branding.
+- Collection-specific branding.
+- Seasonal brand directions.
+- Brand guideline documents.
+- Logo variations.
+- Multilingual brand messaging.
+- Brand-specific social campaigns.
+- Brand-specific media libraries.
+- Future rebranding while preserving Company identity.
+- Brand history and visual identity versioning.
+- CMS-managed brand content and approval workflows.
+
+Stable fields such as `id`, `companyId`, `name`, `slug`, and `logoMediaReference` should remain backward compatible.
+
+New brand capabilities should be added through optional fields, Media References, or relationships to separate entities instead of merging Brand with Company responsibilities.
+
+---
+
+## Example JSON
+
+```json
+{
+  "id": "f2a3d3d1-4b87-4ef2-9a21-6d5c9e6a1201",
+  "publicId": "sfg-brand",
+  "companyId": "8e2b5c4a-4f6d-4f91-9f9e-2d7c2f36b601",
+  "name": "Star Furniture Goa",
+  "shortName": "SFG",
+  "slug": "star-furniture-goa",
+  "description": "Star Furniture Goa is a premium furniture brand focused on elegant, durable, and custom-made furniture for homes, offices, and commercial spaces.",
+  "tagline": "Where Quality Meets Credibility",
+  "secondaryTaglines": [
+    "Custom furniture crafted for modern spaces"
+  ],
+  "positioningStatement": "A trusted Goa-based furniture brand known for premium custom furniture, durable materials, refined design, and dependable craftsmanship.",
+  "toneOfVoice": ["premium", "minimal", "trustworthy", "elegant", "professional"],
+  "brandPersonality": ["credible", "warm", "craftsmanshipFocused", "modern"],
+  "brandValues": [
+    "Quality",
+    "Credibility",
+    "Craftsmanship",
+    "Durability",
+    "Customer Satisfaction"
+  ],
+  "visualStyleKeywords": [
+    "luxury",
+    "minimal",
+    "modern",
+    "warm",
+    "refined"
+  ],
+  "logoMediaReference": {
+    "mediaAssetId": "3c7d8f11-30d5-46d5-9ef1-3f3c5c5a9010",
+    "role": "primaryLogo",
+    "altText": "Star Furniture Goa logo",
+    "caption": "Star Furniture Goa",
+    "displayOrder": 1,
+    "isFeatured": true
+  },
+  "iconMediaReference": {
+    "mediaAssetId": "7d7bc0c5-58df-4b90-9c53-4f248b995901",
+    "role": "brandIcon",
+    "altText": "Star Furniture Goa brand icon",
+    "caption": "SFG icon",
+    "displayOrder": 2,
+    "isFeatured": false
+  },
+  "brandColors": {
+    "primary": "#000000",
+    "secondary": "#FFFFFF",
+    "accent": "#D4AF37",
+    "neutralDark": "#191919",
+    "neutralLight": "#F2E6D8"
+  },
+  "typographyDirection": {
+    "headingFont": "Playfair Display",
+    "bodyFont": "Poppins",
+    "style": "premium-minimal",
+    "notes": "Use elegant headings with clean, readable body text."
+  },
+  "seoMetadata": {
+    "seoTitle": "Star Furniture Goa | Premium Custom Furniture in Goa",
+    "seoDescription": "Star Furniture Goa is a trusted premium furniture brand offering custom engineered wood and plywood furniture for homes, offices, and commercial spaces.",
+    "canonicalUrl": "https://starfurnituregoa.com",
+    "ogTitle": "Star Furniture Goa",
+    "ogDescription": "Where Quality Meets Credibility.",
+    "ogImageId": "3c7d8f11-30d5-46d5-9ef1-3f3c5c5a9010",
+    "keywords": ["star furniture goa", "custom furniture goa", "premium furniture goa"]
+  },
+  "socialLinks": [
+    {
+      "platform": "instagram",
+      "url": "https://instagram.com/starfurnituregoa",
+      "handle": "starfurnituregoa",
+      "isVisible": true,
+      "displayOrder": 1
+    }
+  ],
+  "mediaReferences": [
+    {
+      "mediaAssetId": "a1c4c520-12ef-4eb2-8d2e-95d9eb021001",
+      "role": "brandHero",
+      "altText": "Premium custom furniture by Star Furniture Goa",
+      "caption": "Custom furniture crafted for modern spaces",
+      "displayOrder": 1,
+      "isFeatured": true
+    }
+  ],
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "published"
+  },
+  "status": "active",
+  "createdAt": "2026-07-06T00:00:00+05:30",
+  "updatedAt": "2026-07-06T00:00:00+05:30",
+  "metadata": {
+    "source": "initialDataModel"
+  },
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
+
+# Entity Model: Location
+
+## Purpose
+
+The Location entity represents a physical business location operated by Star Furniture Goa.
+
+A Location may represent:
+
+- Factory
+- Showroom
+- Office
+- Warehouse
+- Future Branch
+
+The current business has one Factory, but the model must support unlimited future locations without requiring structural changes.
+
+The Location entity owns all physical location information. It must not duplicate Company responsibilities or Brand responsibilities.
+
+---
+
+## Responsibilities
+
+The Location entity is responsible for:
+
+- Representing one physical place operated by the Company.
+- Identifying the type of business location.
+- Storing location-specific address information.
+- Storing location-specific contact information when different from Company contact information.
+- Supporting Google Maps display through geo coordinates and map references.
+- Defining customer visit information.
+- Defining business hours for that specific location.
+- Supporting appointment availability for showroom visits, consultations, or future measurement visits.
+- Storing parking and access information.
+- Supporting location-specific media.
+- Supporting future service areas and multiple location expansion.
+- Supporting future showroom-specific experiences without changing the core model.
+
+---
+
+## Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---:|---|---|
+| `id` | UUID String | Required | Internal stable identifier for the Location. | Must be a valid UUID. Must never change after creation. |
+| `companyId` | UUID String | Required | Reference to the Company that owns the Location. | Must reference one valid Company. |
+| `name` | String | Required | Internal or public name of the Location. | Must not be empty. Recommended length: 2-120 characters. |
+| `slug` | String | Required | Public URL-safe identifier for the Location. | Must be lowercase, hyphen-separated, and stable. Should not contain spaces or special characters. |
+| `locationType` | Controlled String | Required | Defines the type of physical location. | Must use a controlled value such as `factory`, `showroom`, `office`, `warehouse`, or `branch`. |
+| `description` | String | Required | Customer-facing or business-facing description of the Location. | Must not be empty. Should describe the purpose of the Location clearly. |
+| `address` | Address | Required | Physical address of the Location. | Must include enough information to identify the location. City, state, and country are required. |
+| `status` | Controlled String | Required | Lifecycle state of the Location record. | Must use a controlled status value such as `active`, `inactive`, `draft`, or `archived`. |
+| `createdAt` | ISO 8601 Date String | Required | Timestamp when the Location record was created. | Must be a valid ISO 8601 timestamp. |
+| `updatedAt` | ISO 8601 Date String | Required | Timestamp when the Location record was last updated. | Must be a valid ISO 8601 timestamp. Must not be earlier than `createdAt`. |
+
+---
+
+## Optional Fields
+
+| Name | Data Type | Description | Validation Rules |
+|---|---|---|---|
+| `publicId` | String | Safe public-facing identifier if the Location needs to be referenced externally. | Must be stable and unique if used. |
+| `displayName` | String | Customer-facing display name if different from `name`. | Should not conflict with the Location name. |
+| `shortDescription` | String | Short customer-facing summary of the Location. | Should be concise and suitable for cards, lists, or previews. |
+| `contactInformation` | Contact Information | Location-specific contact details. | Should only be used when different from Company-level contact information. |
+| `geoCoordinates` | Geo Coordinates | Map coordinates and map-related reference information for the Location. | Latitude and longitude must be valid if provided. |
+| `businessHours` | Array of Business Hours | Opening hours for this specific Location. | Should represent this Location only, not the whole Company unless the Location is the only operating location. |
+| `acceptsCustomerVisits` | Boolean | Indicates whether customers may visit this Location. | Must be `true` or `false` when provided. |
+| `acceptsAppointments` | Boolean | Indicates whether this Location supports scheduled visits or consultations. | Must be `true` or `false` when provided. |
+| `appointmentAvailability` | Object | High-level appointment availability rules for this Location. | Should only describe appointment-specific availability and should not duplicate general business hours. |
+| `visitInstructions` | String | Instructions for customers visiting the Location. | Should be clear, practical, and location-specific. |
+| `parkingInformation` | Object | Parking availability and access details for visitors. | Should describe parking for this Location only. |
+| `accessibilityNotes` | String | Notes about access, entry, stairs, lifts, or visitor convenience. | Should be factual and location-specific. |
+| `serviceOfferingIds` | Array of UUID Strings | References to Service Offerings available at this Location. | Each value must reference a valid Service Offering. |
+| `serviceAreaIds` | Array of UUID Strings | Future references to Service Areas supported by this Location. | Should only be used once Service Area is introduced as a future entity. |
+| `serviceAreaNotes` | String | Temporary description of areas served by this Location before Service Area becomes a formal entity. | Should not duplicate Company-wide service information. |
+| `mediaReferences` | Array of Media Reference | Location-specific media such as factory photos, showroom photos, exterior images, or map-related visuals. | Must reference valid Media Assets. |
+| `seoMetadata` | SEO Metadata | Search and social metadata for a public Location page. | Should follow the SEO Metadata shared value object. |
+| `visibilitySettings` | Visibility Settings | Controls whether this Location is visible or featured in business-controlled contexts. | Should not be used for page layout decisions. |
+| `localizations` | Array of Localization Text | Translated customer-facing Location content. | Locale values should follow the approved localization strategy. |
+| `metadata` | Object | Flexible non-primary information for future integrations or migration support. | Must not contain business-critical fields, Company data, Brand identity, or duplicated address details. |
+| `isDeleted` | Boolean | Soft deletion flag. | Should be `false` for active Location records. |
+| `deletedAt` | ISO 8601 Date String | Timestamp for soft deletion. | Required only when `isDeleted` is `true`. |
+
+---
+
+## Relationships
+
+### Company
+
+A Location belongs to exactly one Company.
+
+Relationship field:
+
+- `companyId`
+
+The Company owns the business.  
+The Location represents one physical place operated by that business.
+
+The Company may reference a Location through `locationIds` or `primaryLocationId`, but the Location must always identify its owner through `companyId`.
+
+---
+
+### Service Offerings
+
+A Location may support one or more Service Offerings.
+
+Relationship field:
+
+- `serviceOfferingIds`
+
+This relationship describes which services are available at a specific Location, such as consultation, showroom visit, manufacturing, delivery coordination, or design support.
+
+The Location should reference Service Offerings instead of redefining service details.
+
+---
+
+### Media Assets
+
+A Location may reference multiple Media Assets.
+
+Relationship field:
+
+- `mediaReferences`
+
+Location media may include factory images, showroom images, exterior photos, visitor guidance visuals, or future virtual tours.
+
+The Location should reference Media Assets through Media References instead of storing raw file paths.
+
+---
+
+### Enquiries
+
+A Location may receive or be associated with many Enquiries.
+
+Relationship direction:
+
+- Each Enquiry may reference the Location through `locationId`.
+
+The Location should not store `enquiryIds` because enquiry volume may grow continuously.
+
+---
+
+### Reviews
+
+A Location may be associated with many Reviews.
+
+Relationship direction:
+
+- Each Review may reference the Location through `locationId`.
+
+The Location should not store `reviewIds` because review volume may grow over time.
+
+---
+
+### Appointments
+
+A Location may support future Appointments.
+
+Relationship direction:
+
+- Each future Appointment may reference the Location through `locationId`.
+
+The Location should not store `appointmentIds` because appointment history may grow continuously.
+
+---
+
+### Service Areas
+
+A Location may later support one or more Service Areas.
+
+Relationship field:
+
+- `serviceAreaIds`
+
+This relationship is reserved for future expansion when service areas become formal business entities.
+
+---
+
+## Business Rules
+
+- A Location must belong to exactly one Company.
+- A Location must have a stable internal `id`.
+- A Location must have a valid `companyId`.
+- A Location must have a valid `locationType`.
+- A Location must own its physical address through `address`.
+- A Location must not contain Company responsibilities such as legal identity, business history, company-wide ownership, warranty ownership, or root business contact ownership.
+- A Location must not contain Brand responsibilities such as logo, brand colors, typography, tagline, tone of voice, or visual identity.
+- Location-specific contact information should only exist when it differs from Company-level contact information.
+- Location-specific business hours should be stored on Location, not Company.
+- Location-specific geo coordinates should be stored on Location, not Company.
+- Location-specific media should use Media References.
+- A Location may represent a Factory, Showroom, Office, Warehouse, or Future Branch without structural changes.
+- Customer visit details must describe only this Location.
+- Parking information must describe only this Location.
+- Appointment availability must describe only this Location and must not replace general business hours.
+- Large child relationships such as Enquiries, Reviews, and Appointments should reference Location through `locationId`.
+- The Location should not contain full Enquiry, Review, Appointment, Service Offering, or Media Asset objects directly.
+- `metadata` must not become a hidden place for core location data.
+- Soft deletion should preserve Location history and must not automatically erase Company data or related business entities.
+- Location status must control whether the Location is considered active, inactive, draft, or archived.
+
+---
+
+## Shared Value Objects Used
+
+The Location entity uses the following Shared Value Objects:
+
+- Address
+- Contact Information
+- Business Hours
+- Geo Coordinates
+- Media Reference
+- SEO Metadata
+- Visibility Settings
+- Localization Text
+
+The Location must not use Brand-specific visual identity fields.
+
+---
+
+## Future Expansion
+
+The Location entity can evolve without breaking compatibility by adding optional fields or relationships rather than changing existing required fields.
+
+Future expansion may include:
+
+- Multiple factories.
+- Multiple showrooms.
+- Warehouses.
+- Corporate offices.
+- Future branches.
+- Google Maps place details.
+- Location-specific galleries.
+- Location-specific virtual tours.
+- Location-specific staff assignment.
+- Appointment scheduling.
+- Visit capacity.
+- Holiday business hours.
+- Service areas.
+- Local SEO landing pages.
+- Showroom-specific reviews.
+- Showroom-specific catalogue displays.
+- Future branch-level analytics.
+
+Stable fields such as `id`, `companyId`, `name`, `slug`, `locationType`, and `address` should remain backward compatible.
+
+New location capabilities should be added through optional fields, Shared Value Objects, or references to separate future entities instead of expanding Location into an oversized record.
+
+---
+
+## Example JSON
+
+```json
+{
+  "id": "2f6f4f90-6f36-4ed0-9987-365d0e9e9012",
+  "publicId": "sfg-primary-factory",
+  "companyId": "8e2b5c4a-4f6d-4f91-9f9e-2d7c2f36b601",
+  "name": "Star Furniture Goa Factory",
+  "displayName": "Star Furniture Goa Factory",
+  "slug": "star-furniture-goa-factory",
+  "locationType": "factory",
+  "description": "Primary factory location for Star Furniture Goa, supporting custom furniture manufacturing and customer visits by appointment.",
+  "shortDescription": "Primary factory and customer visit location for Star Furniture Goa.",
+  "address": {
+    "line1": "Star Furniture Goa",
+    "line2": "Goa",
+    "landmark": "",
+    "city": "Goa",
+    "state": "Goa",
+    "postalCode": "",
+    "country": "India",
+    "formattedAddress": "Star Furniture Goa, Goa, India"
+  },
+  "contactInformation": {
+    "phoneNumber": "+91 9876543210",
+    "whatsappNumber": "+91 9876543210",
+    "email": "info@starfurnituregoa.com",
+    "website": "https://starfurnituregoa.com",
+    "preferredContactMethod": "whatsapp"
+  },
+  "geoCoordinates": {
+    "latitude": 15.2993,
+    "longitude": 74.124,
+    "mapUrl": "https://maps.google.com/?q=Star+Furniture+Goa",
+    "placeId": "",
+    "locationLabel": "Star Furniture Goa Factory"
+  },
+  "businessHours": [
+    {
+      "dayOfWeek": "monday",
+      "opensAt": "10:00",
+      "closesAt": "19:00",
+      "isClosed": false,
+      "notes": ""
+    },
+    {
+      "dayOfWeek": "sunday",
+      "opensAt": "",
+      "closesAt": "",
+      "isClosed": true,
+      "notes": "Closed"
+    }
+  ],
+  "acceptsCustomerVisits": true,
+  "acceptsAppointments": true,
+  "appointmentAvailability": {
+    "appointmentTypes": ["factoryVisit", "designConsultation"],
+    "requiresPriorConfirmation": true,
+    "preferredBookingChannel": "whatsapp",
+    "notes": "Customer visits are recommended by prior WhatsApp confirmation."
+  },
+  "visitInstructions": "Please confirm your visit on WhatsApp before arriving.",
+  "parkingInformation": {
+    "isParkingAvailable": true,
+    "parkingType": "onSite",
+    "notes": "Customer parking is available near the factory entrance."
+  },
+  "accessibilityNotes": "Visitors may contact the team in advance for entry assistance.",
+  "serviceOfferingIds": [
+    "5d8c65b7-48e6-46f6-a4b4-b3a76f2b0191",
+    "a49d86a2-7b82-47d1-8947-282671726901"
+  ],
+  "serviceAreaNotes": "Serves customers across Goa for custom furniture enquiries and consultations.",
+  "mediaReferences": [
+    {
+      "mediaAssetId": "9a6d7820-2c1f-4a87-9291-f91b35fd1001",
+      "role": "locationExterior",
+      "altText": "Star Furniture Goa factory exterior",
+      "caption": "Star Furniture Goa Factory",
+      "displayOrder": 1,
+      "isFeatured": true
+    }
+  ],
+  "seoMetadata": {
+    "seoTitle": "Star Furniture Goa Factory | Custom Furniture in Goa",
+    "seoDescription": "Visit Star Furniture Goa for custom engineered wood and plywood furniture consultations in Goa.",
+    "canonicalUrl": "https://starfurnituregoa.com/location/star-furniture-goa-factory",
+    "ogTitle": "Star Furniture Goa Factory",
+    "ogDescription": "Primary factory location for custom furniture consultations.",
+    "ogImageId": "9a6d7820-2c1f-4a87-9291-f91b35fd1001",
+    "keywords": ["star furniture goa factory", "custom furniture goa", "furniture showroom goa"]
+  },
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "published"
+  },
+  "status": "active",
+  "createdAt": "2026-07-06T00:00:00+05:30",
+  "updatedAt": "2026-07-06T00:00:00+05:30",
+  "metadata": {
+    "source": "initialDataModel"
+  },
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
+
+# Entity Model: Category
+
+## Purpose
+
+The Category entity represents a major furniture classification used to organize browsing, discovery, search, filters, catalogues, collections, and website navigation.
+
+Examples include:
+
+- Modular Kitchens
+- Wardrobes
+- Beds
+- TV Units
+- Office Furniture
+- Dining Furniture
+- Dressing Tables
+- Custom Furniture
+
+A Category is primarily a discovery concept. It helps customers browse furniture by type.
+
+A Category must not own Products directly. Products should reference Category using `categoryId`.
+
+---
+
+## Responsibilities
+
+The Category entity is responsible for:
+
+- Representing one major furniture classification.
+- Helping customers browse furniture by need or product type.
+- Supporting category-specific discovery.
+- Supporting category-specific SEO pages.
+- Supporting homepage featured categories.
+- Supporting search and filters.
+- Supporting collection browsing.
+- Supporting category-specific catalogues.
+- Supporting future nested categories.
+- Providing a stable classification reference for Products, Collections, Catalogues, Enquiries, and Design Your Space Requests.
+
+---
+
+## Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---:|---|---|
+| `id` | UUID String | Required | Internal stable identifier for the Category. | Must be a valid UUID. Must never change after creation. |
+| `companyId` | UUID String | Required | Reference to the Company that owns the Category. | Must reference one valid Company. |
+| `name` | String | Required | Public category name shown to customers. | Must not be empty. Recommended length: 2-120 characters. |
+| `slug` | String | Required | Public URL-safe identifier for the Category. | Must be lowercase, hyphen-separated, and stable. Should not contain spaces or special characters. |
+| `description` | String | Required | Customer-facing explanation of the furniture category. | Must not be empty. Should describe the category clearly and professionally. |
+| `categoryType` | Controlled String | Required | Defines the high-level type of category. | Must use a controlled value such as `furniture`, `roomBased`, `custom`, or `commercial`. |
+| `status` | Controlled String | Required | Lifecycle state of the Category record. | Must use a controlled status value such as `active`, `inactive`, `draft`, or `archived`. |
+| `createdAt` | ISO 8601 Date String | Required | Timestamp when the Category record was created. | Must be a valid ISO 8601 timestamp. |
+| `updatedAt` | ISO 8601 Date String | Required | Timestamp when the Category record was last updated. | Must be a valid ISO 8601 timestamp. Must not be earlier than `createdAt`. |
+
+---
+
+## Optional Fields
+
+| Name | Data Type | Description | Validation Rules |
+|---|---|---|---|
+| `publicId` | String | Safe public-facing identifier if the Category needs to be referenced externally. | Must be stable and unique if used. |
+| `displayName` | String | Customer-facing display name if different from `name`. | Should not conflict with the Category name. |
+| `shortDescription` | String | Short customer-facing summary of the Category. | Should be concise and suitable for cards, navigation, or previews. |
+| `parentCategoryId` | UUID String | Reference to a parent Category for future nested category support. | Must reference a valid Category when provided. Must not create circular relationships. |
+| `roomSpaceTypeIds` | Array of UUID Strings | References to Room / Space Types commonly associated with this Category. | Each value must reference a valid Room / Space Type. |
+| `searchKeywords` | Array of Strings | Search-friendly terms customers may use to find this Category. | Should contain customer-facing search terms. Must not replace structured relationships. |
+| `filterTags` | Array of Strings | Discovery tags used to support category-level filtering or grouping. | Should be controlled where possible. Must not duplicate Product-specific filters. |
+| `mediaReferences` | Array of Media Reference | Category-specific media such as category images, thumbnails, hero images, or inspiration visuals. | Must reference valid Media Assets. |
+| `seoMetadata` | SEO Metadata | Search and social metadata for a public Category page. | Should follow the SEO Metadata shared value object. |
+| `visibilitySettings` | Visibility Settings | Controls whether the Category is visible, featured, or ordered in business-controlled contexts. | Should support homepage featured categories and category ordering. Should not be used for page layout decisions. |
+| `localizations` | Array of Localization Text | Translated customer-facing Category content. | Locale values should follow the approved localization strategy. |
+| `versionInformation` | Version Information | Revision details for category content if category naming, descriptions, or publishing status change over time. | Should follow the approved versioning strategy when used. |
+| `metadata` | Object | Flexible non-primary information for future integrations or migration support. | Must not contain business-critical fields, Company data, Brand identity, Product details, or Catalogue details. |
+| `isDeleted` | Boolean | Soft deletion flag. | Should be `false` for active Category records. |
+| `deletedAt` | ISO 8601 Date String | Timestamp for soft deletion. | Required only when `isDeleted` is `true`. |
+
+---
+
+## Relationships
+
+### Company
+
+A Category belongs to exactly one Company.
+
+Relationship field:
+
+- `companyId`
+
+The Company owns the business.  
+The Category represents one business-owned furniture classification.
+
+The Company should not store large Category lists directly. Categories should identify their owner through `companyId`.
+
+---
+
+### Parent Category
+
+A Category may optionally belong to another Category.
+
+Relationship field:
+
+- `parentCategoryId`
+
+This supports future nested categories such as:
+
+- Wardrobes
+  - Sliding Wardrobes
+  - Hinged Wardrobes
+  - Walk-in Wardrobes
+
+Nested categories should use references and must not duplicate parent category information.
+
+---
+
+### Products
+
+Products may belong to a Category.
+
+Relationship direction:
+
+- Each Product should reference the Category through `categoryId`.
+
+The Category must not store `productIds` because Product volume can grow over time and Products own their classification reference.
+
+---
+
+### Collections
+
+Collections may reference one or more Categories.
+
+Relationship direction:
+
+- Each Collection may reference Categories through `categoryIds`.
+
+The Category must not store `collectionIds` because Collections are curated groupings that should own their category references.
+
+---
+
+### Catalogues
+
+Catalogues may reference one or more Categories.
+
+Relationship direction:
+
+- Each Catalogue may reference Categories through `categoryIds`.
+
+The Category must not store `catalogueIds` because Catalogues may expand, change, and version over time.
+
+---
+
+### Room / Space Types
+
+A Category may be associated with one or more Room / Space Types.
+
+Relationship field:
+
+- `roomSpaceTypeIds`
+
+This supports discovery by space, such as kitchen, bedroom, living room, office, or commercial space.
+
+---
+
+### Media Assets
+
+A Category may reference multiple Media Assets.
+
+Relationship field:
+
+- `mediaReferences`
+
+Category media may include thumbnails, hero images, category previews, inspiration images, or future category videos.
+
+The Category should reference Media Assets through Media References instead of storing raw file paths.
+
+---
+
+### Enquiries
+
+A Category may be referenced by customer Enquiries.
+
+Relationship direction:
+
+- Each Enquiry may reference Category through `categoryId` or `categoryIds`.
+
+The Category should not store `enquiryIds` because enquiry volume may grow continuously.
+
+---
+
+### Design Your Space Requests
+
+A Category may be referenced by Design Your Space Requests.
+
+Relationship direction:
+
+- Each Design Your Space Request may reference Category through `categoryId` or `categoryIds`.
+
+The Category should not store design request history directly.
+
+---
+
+## Business Rules
+
+- A Category must belong to exactly one Company.
+- A Category must have a stable internal `id`.
+- A Category must have a valid `companyId`.
+- A Category must have a customer-facing `name`.
+- A Category must have a stable SEO-friendly `slug`.
+- A Category must represent a furniture classification, not a Product, Collection, Catalogue, Brand, Location, or Service Offering.
+- A Category must not contain Product details directly.
+- A Category must not store `productIds`.
+- Products must reference Category using `categoryId`.
+- Catalogues must reference Category using `categoryIds`.
+- Collections must reference Category using `categoryIds`.
+- Category-specific media must use Media References.
+- Category search keywords must support discovery and must not replace structured relationships.
+- Category filter tags must describe category-level discovery only and must not duplicate Product-level filter data.
+- Parent category relationships must not create circular category trees.
+- A Category must not contain Company responsibilities such as legal identity, business history, contact ownership, locations, warranties, or service ownership.
+- A Category must not contain Brand responsibilities such as logo identity, brand colors, typography, tagline, tone of voice, or visual identity.
+- A Category must not contain Product responsibilities such as materials, finishes, measurements, variants, warranty policy selection, or product media galleries.
+- Large child relationships such as Products, Catalogues, Collections, Enquiries, and Design Your Space Requests should reference Category from the child entity.
+- `metadata` must not become a hidden place for core category data.
+- Soft deletion should preserve Category history and must not automatically erase Products, Collections, Catalogues, Enquiries, or Design Your Space Requests.
+- Category status must control whether the Category is considered active, inactive, draft, or archived.
+
+---
+
+## Shared Value Objects Used
+
+The Category entity uses the following Shared Value Objects:
+
+- Media Reference
+- SEO Metadata
+- Visibility Settings
+- Localization Text
+- Version Information
+
+The Category must not use Address, Contact Information, Business Hours, Geo Coordinates, or Measurement because those responsibilities belong to Location, Company, Product, Product Variant, Design Your Space Request, or future Quotation contexts.
+
+---
+
+## Future Expansion
+
+The Category entity can evolve without breaking compatibility by adding optional fields or relationships rather than changing existing required fields.
+
+Future expansion may include:
+
+- Nested categories.
+- Category-specific landing pages.
+- Category-specific catalogues.
+- Category-specific SEO.
+- Category-specific filter configurations.
+- Category-specific media galleries.
+- Category-specific videos.
+- Category-specific FAQs.
+- Category-specific recommendations.
+- Homepage featured category groups.
+- Room-based category browsing.
+- Multilingual category content.
+- CMS-managed category ordering.
+- Category publishing workflows.
+- Category analytics.
+- AI-assisted search and recommendations.
+
+Stable fields such as `id`, `companyId`, `name`, `slug`, and `categoryType` should remain backward compatible.
+
+New category capabilities should be added through optional fields, Shared Value Objects, or references to separate future entities instead of expanding Category into an oversized record.
+
+Products, Catalogues, and Collections should continue to reference Category rather than being embedded inside Category.
+
+---
+
+## Example JSON
+
+```json
+{
+  "id": "b6a2c7e0-1b7d-4c34-8f8b-91e73a6d1001",
+  "publicId": "sfg-category-modular-kitchens",
+  "companyId": "8e2b5c4a-4f6d-4f91-9f9e-2d7c2f36b601",
+  "name": "Modular Kitchens",
+  "displayName": "Modular Kitchens",
+  "slug": "modular-kitchens",
+  "description": "Modular Kitchens include customized kitchen furniture solutions designed for storage, durability, efficient layouts, and elegant everyday use.",
+  "shortDescription": "Custom modular kitchen solutions designed for modern homes.",
+  "categoryType": "roomBased",
+  "parentCategoryId": null,
+  "roomSpaceTypeIds": [
+    "5f0e2a91-42a3-4f3d-9d45-71f2f7b41001"
+  ],
+  "searchKeywords": [
+    "modular kitchen",
+    "custom kitchen",
+    "kitchen cabinets",
+    "kitchen storage",
+    "kitchen furniture goa"
+  ],
+  "filterTags": [
+    "kitchen",
+    "storage",
+    "customFurniture",
+    "engineeredWood",
+    "plywood"
+  ],
+  "mediaReferences": [
+    {
+      "mediaAssetId": "c4d8f280-2d84-4c91-9b91-328d5f861001",
+      "role": "categoryHero",
+      "altText": "Modular kitchen furniture by Star Furniture Goa",
+      "caption": "Custom Modular Kitchens",
+      "displayOrder": 1,
+      "isFeatured": true
+    },
+    {
+      "mediaAssetId": "f26b5e10-95a1-4f8e-9f1e-3fd8f8e51001",
+      "role": "categoryThumbnail",
+      "altText": "Modern modular kitchen cabinets",
+      "caption": "Modular Kitchens",
+      "displayOrder": 2,
+      "isFeatured": false
+    }
+  ],
+  "seoMetadata": {
+    "seoTitle": "Modular Kitchens in Goa | Star Furniture Goa",
+    "seoDescription": "Explore custom modular kitchen furniture by Star Furniture Goa, crafted for elegant storage, durability, and modern home layouts.",
+    "canonicalUrl": "https://starfurnituregoa.com/collections/modular-kitchens",
+    "ogTitle": "Modular Kitchens",
+    "ogDescription": "Custom modular kitchen solutions designed for modern homes in Goa.",
+    "ogImageId": "c4d8f280-2d84-4c91-9b91-328d5f861001",
+    "keywords": [
+      "modular kitchens goa",
+      "custom kitchen furniture goa",
+      "kitchen cabinets goa"
+    ]
+  },
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "published"
+  },
+  "versionInformation": {
+    "version": 1,
+    "versionLabel": "Initial Category Definition",
+    "versionStatus": "published",
+    "effectiveFrom": "2026-07-11T00:00:00+05:30",
+    "effectiveTo": null,
+    "changeSummary": "Initial category definition for Modular Kitchens."
+  },
+  "status": "active",
+  "createdAt": "2026-07-11T00:00:00+05:30",
+  "updatedAt": "2026-07-11T00:00:00+05:30",
+  "metadata": {
+    "source": "initialDataModel"
+  },
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
+
+
+
 ---
 
 # Relationship Summary
