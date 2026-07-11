@@ -3556,6 +3556,573 @@ Future entities such as Supplier, Inventory Record, Certification, Pricing, Quot
 }
 ```
 
+## Finish Entity Model
+
+### 1. Purpose
+
+The Finish entity represents a reusable surface appearance, texture, or treatment that can be applied to one or more Materials.
+
+A Finish describes how furniture looks and feels. It does not describe what the furniture is made from.
+
+Examples include Walnut Matte, White Matte, Natural Oak, Gloss White, Charcoal Grey, Textured Oak, and Matte Black.
+
+Products and Product Variants reference Finishes through `finishIds`.
+
+A Finish must not own Products, Product Variants, or Materials.
+
+---
+
+### 2. Responsibilities
+
+The Finish entity is responsible for:
+
+- Defining reusable finish information.
+- Describing surface appearance, texture, sheen, and visual character.
+- Supporting Product and Product Variant finish references.
+- Supporting finish swatches and finish galleries.
+- Supporting finish-based search and filters.
+- Supporting finish comparison.
+- Communicating care recommendations.
+- Communicating finish durability information.
+- Supporting future supplier and inventory integrations.
+
+The Finish entity is not responsible for:
+
+- Defining what furniture is made from.
+- Owning Materials.
+- Owning Products.
+- Owning Product Variants.
+- Defining Product-level descriptions.
+- Defining pricing logic.
+- Managing inventory quantities.
+- Replacing Material information.
+
+---
+
+### 3. Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the Finish. | Must be globally unique and immutable. |
+| `companyId` | UUID String | Required | Reference to the Company that owns this Finish definition. | Must reference one valid Company. |
+| `name` | String | Required | Finish name. | Must be clear, customer-readable, and unique within the Company. |
+| `slug` | String | Required | SEO-friendly and URL-safe finish identifier. | Must be lowercase, hyphen-separated, and unique within the Company. |
+| `description` | String | Required | Customer-facing explanation of the Finish. | Must describe the finish itself, not specific Products using it. |
+| `finishType` | Controlled String | Required | Broad classification of the Finish. | Suggested values: `matte`, `gloss`, `textured`, `woodGrain`, `solidColor`, `metallic`, `natural`, `laminate`, `acrylic`, `painted`, `other`. |
+| `status` | Controlled String | Required | Lifecycle status of the Finish. | Suggested values: `active`, `inactive`, `draft`, `archived`, `discontinued`. |
+| `createdAt` | ISO 8601 Date String | Required | Date and time when the Finish was created. | Must use ISO 8601 format. |
+| `updatedAt` | ISO 8601 Date String | Required | Date and time when the Finish was last updated. | Must use ISO 8601 format and update whenever Finish data changes. |
+
+---
+
+### 4. Optional Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `publicId` | String | Optional | Customer-safe identifier for public references. | Must not expose internal sequencing or sensitive data. |
+| `displayName` | String | Optional | Alternate customer-facing Finish name. | Should be used only when different from `name`. |
+| `shortDescription` | String | Optional | Brief summary for filters, cards, or comparison views. | Should remain concise and finish-specific. |
+| `finishCategory` | Controlled String | Optional | Higher-level grouping for browsing or filtering Finishes. | Suggested values: `woodLook`, `solidColor`, `premiumTexture`, `highGloss`, `matteSurface`, `decorative`, `hardwareFinish`, `other`. |
+| `colorFamily` | String | Optional | General color grouping for search and filters. | Examples: `white`, `black`, `brown`, `grey`, `beige`, `natural`, `gold`. |
+| `colorInformation` | Object | Optional | Structured color details such as primary color, secondary color, or approximate hex value. | Should be used for visual matching only, not as a replacement for swatch media. |
+| `textureType` | Controlled String | Optional | Describes the tactile or visual texture of the Finish. | Suggested values: `smooth`, `woodGrain`, `linen`, `stone`, `metallic`, `embossed`, `highTexture`, `other`. |
+| `sheenLevel` | Controlled String | Optional | Describes the surface shine level. | Suggested values: `matte`, `satin`, `semiGloss`, `gloss`, `highGloss`. |
+| `patternType` | String | Optional | Describes pattern style if relevant. | Examples: `plain`, `oak grain`, `walnut grain`, `linear texture`, `marble effect`. |
+| `careRecommendations` | String | Optional | Cleaning and care guidance for the Finish. | Must be customer-readable and practical. |
+| `durabilityInformation` | String | Optional | Explanation of finish durability, resistance, or usage suitability. | Must describe finish-level durability only. |
+| `durabilityRating` | Number | Optional | Simple durability score for comparison. | Should use a consistent scale if used, such as 1 to 5. |
+| `compatibleMaterialIds` | Array of UUID Strings | Optional | References to Materials commonly compatible with this Finish. | Must reference valid Material entities and must not imply ownership. |
+| `warrantyPolicyIds` | Array of UUID Strings | Optional | References to Warranty Policies compatible with this Finish if applicable. | Must reference valid Warranty Policy entities. |
+| `supplierIds` | Array of UUID Strings | Optional | Future references to Suppliers. | Reserved for future supplier integration. |
+| `inventoryReferenceIds` | Array of UUID Strings | Optional | Future references to finish inventory, stock, or sample records. | Must not store inventory quantities directly unless inventory modeling is formally introduced. |
+| `mediaReferences` | Array of Media Reference Objects | Optional | Finish swatches, gallery images, close-ups, or videos. | Must use Media Reference value objects instead of direct file paths. |
+| `comparisonAttributes` | Object | Optional | Structured values used for finish comparison. | Must contain only stable comparison-friendly values. |
+| `searchKeywords` | Array of Strings | Optional | Additional searchable terms for the Finish. | Should support discovery without duplicating unrelated Product keywords. |
+| `filterTags` | Array of Strings | Optional | Finish-specific filter values. | Should use consistent normalized terms. |
+| `seoMetadata` | SEO Metadata Object | Optional | SEO information for future finish education or landing pages. | Must use the shared SEO Metadata value object. |
+| `visibilitySettings` | Visibility Settings Object | Optional | Controls whether the Finish appears in filters, pages, or featured sections. | Must use the shared Visibility Settings value object. |
+| `localizations` | Array of Localization Text Objects | Optional | Future translations for Finish content. | Must follow the approved localization strategy. |
+| `versionInformation` | Version Information Object | Optional | Tracks future Finish revisions. | Required if finish descriptions, compatibility, or availability need historical tracking. |
+| `metadata` | Object | Optional | Non-critical extensibility data. | Must not contain business-critical fields. |
+| `isDeleted` | Boolean | Optional | Soft deletion flag. | Must default to `false` when used. |
+| `deletedAt` | ISO 8601 Date String | Optional | Date and time when the Finish was soft deleted. | Required only when `isDeleted` is `true`. |
+
+---
+
+### 5. Relationships
+
+- Finish belongs to one Company through `companyId`.
+- Products reference Finishes through `finishIds`.
+- Product Variants reference Finishes through `finishIds`.
+- Finish may reference compatible Materials through `compatibleMaterialIds`.
+- Finish may reference compatible Warranty Policies through `warrantyPolicyIds`.
+- Finish may reference future Suppliers through `supplierIds`.
+- Finish may reference future inventory records through `inventoryReferenceIds`.
+- Finish references Media Assets through `mediaReferences`.
+
+Finish does not store `productIds`, `productVariantIds`, or owned `materialIds`.
+
+Products, Product Variants, and Materials manage their own references where appropriate.
+
+---
+
+### 6. Business Rules
+
+- A Finish must represent reusable finish-specific information only.
+- A Finish must describe appearance, texture, treatment, or surface feel.
+- A Finish must not describe what the furniture is made from.
+- A Finish must not own Products, Product Variants, or Materials.
+- Products must reference Finishes using `finishIds`.
+- Product Variants must reference Finishes using `finishIds`.
+- Material compatibility may be represented through `compatibleMaterialIds`, but this must not imply ownership of Materials.
+- Finish media must use Media References instead of direct file paths.
+- Finish swatches should be represented as media references, not hardcoded image paths.
+- Finish descriptions must not duplicate Product, Product Variant, or Material descriptions.
+- Supplier and inventory references must remain optional until those domains are formally introduced.
+- A discontinued Finish should remain available for historical Product, Product Variant, Wishlist, Enquiry, and Quotation references.
+- Soft-deleted Finishes must not appear in customer-facing filters unless explicitly restored.
+
+---
+
+### 7. Shared Value Objects Used
+
+- Media Reference
+- SEO Metadata
+- Visibility Settings
+- Localization Text
+- Version Information
+
+---
+
+### 8. Future Expansion
+
+The Finish model supports future growth without redesign by allowing:
+
+- Finish swatch libraries.
+- Finish galleries and close-up media.
+- Finish comparison tools.
+- Finish-based search and filters.
+- Compatibility mapping with Materials.
+- Supplier integration through `supplierIds`.
+- Inventory integration through `inventoryReferenceIds`.
+- Care and durability guidance.
+- Future CMS-managed finish visibility and ordering.
+- Future quotation and manufacturing workflows.
+
+Future entities such as Supplier, Inventory Record, Pricing, Quotation, Manufacturing Configuration, and Finish Sample can reference Finish without changing the core Finish model.
+
+---
+
+### 9. Example JSON
+
+```json
+{
+  "id": "7c4e8d2a-9b15-4f62-8e71-1f93c7a2d501",
+  "publicId": "finish-sfg-walnut-matte",
+  "companyId": "2a7c91e5-4d8f-4c21-9f62-6e39d8a4f101",
+  "name": "Walnut Matte",
+  "slug": "walnut-matte",
+  "description": "A warm walnut-inspired matte finish with a refined wood-grain appearance suitable for premium wardrobes, TV units, and custom furniture.",
+  "finishType": "woodGrain",
+  "finishCategory": "woodLook",
+  "colorFamily": "brown",
+  "colorInformation": {
+    "primaryColor": "Walnut Brown",
+    "secondaryColor": "Dark Grain",
+    "approximateHex": "#6B4A2E"
+  },
+  "textureType": "woodGrain",
+  "sheenLevel": "matte",
+  "patternType": "walnut grain",
+  "careRecommendations": "Clean with a soft dry cloth. Avoid abrasive cleaners and prolonged exposure to moisture.",
+  "durabilityInformation": "Suitable for everyday residential furniture use when applied on compatible boards and maintained properly.",
+  "durabilityRating": 4,
+  "compatibleMaterialIds": [
+    "material-sfg-plywood-premium",
+    "material-sfg-engineered-wood"
+  ],
+  "warrantyPolicyIds": [],
+  "supplierIds": [],
+  "inventoryReferenceIds": [],
+  "mediaReferences": [
+    {
+      "mediaAssetId": "media-walnut-matte-swatch",
+      "mediaType": "image",
+      "altText": "Walnut matte finish swatch",
+      "displayOrder": 1,
+      "isPrimary": true
+    },
+    {
+      "mediaAssetId": "media-walnut-matte-closeup",
+      "mediaType": "image",
+      "altText": "Close-up view of walnut matte wood grain finish",
+      "displayOrder": 2,
+      "isPrimary": false
+    }
+  ],
+  "comparisonAttributes": {
+    "colorFamily": "Brown",
+    "surface": "Matte",
+    "texture": "Wood Grain",
+    "visualStyle": "Premium Warm"
+  },
+  "searchKeywords": [
+    "walnut matte",
+    "wood grain finish",
+    "brown matte finish",
+    "premium wardrobe finish"
+  ],
+  "filterTags": [
+    "walnut",
+    "matte",
+    "wood-grain",
+    "brown",
+    "premium"
+  ],
+  "seoMetadata": {
+    "metaTitle": "Walnut Matte Furniture Finish",
+    "metaDescription": "Walnut matte finish for premium wardrobes, TV units, and custom furniture by Star Furniture Goa.",
+    "canonicalUrl": null,
+    "ogImageMediaReference": null
+  },
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "visible"
+  },
+  "versionInformation": {
+    "version": 1,
+    "versionLabel": "Initial Finish Definition",
+    "versionStatus": "published",
+    "effectiveFrom": "2026-07-11T00:00:00+05:30",
+    "effectiveTo": null,
+    "changeSummary": "Initial reusable finish definition."
+  },
+  "metadata": {},
+  "status": "active",
+  "createdAt": "2026-07-11T00:00:00+05:30",
+  "updatedAt": "2026-07-11T00:00:00+05:30",
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
+
+## Catalogue Entity Model
+
+### 1. Purpose
+
+The Catalogue entity represents a curated business publication used to showcase Products, Categories, Collections, Materials, Finishes, and design inspiration.
+
+A Catalogue is not a PDF file.
+
+A Catalogue represents the business publication itself. The actual PDF document, cover image, thumbnail, downloadable asset, or future digital format must be represented through Media References.
+
+Examples include Modular Kitchen Catalogue 2026, Premium Wardrobe Collection, Bedroom Furniture Catalogue, and Office Furniture Catalogue.
+
+---
+
+### 2. Responsibilities
+
+The Catalogue entity is responsible for:
+
+- Defining catalogue identity and publication information.
+- Representing a curated business publication.
+- Supporting catalogue browsing and discovery.
+- Connecting catalogue context to Categories, Collections, and Products through references.
+- Supporting embedded PDF viewing through Media References.
+- Supporting cloud-hosted catalogue documents.
+- Supporting cover images, thumbnails, and downloadable assets through Media References.
+- Supporting SEO for catalogue landing pages.
+- Supporting catalogue search and filters.
+- Supporting version history.
+- Supporting multiple languages.
+- Supporting future CMS publishing workflows.
+
+The Catalogue entity is not responsible for:
+
+- Owning Products.
+- Owning Categories.
+- Owning Collections.
+- Owning PDF files directly.
+- Storing raw file paths.
+- Managing the catalogue viewer implementation.
+- Managing cloud storage providers.
+- Replacing Product, Category, or Collection content.
+
+---
+
+### 3. Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the Catalogue. | Must be globally unique and immutable. |
+| `companyId` | UUID String | Required | Reference to the Company that owns the Catalogue. | Must reference one valid Company. |
+| `name` | String | Required | Catalogue name. | Must be clear, customer-readable, and unique within the Company unless versioned. |
+| `slug` | String | Required | SEO-friendly and URL-safe catalogue identifier. | Must be lowercase, hyphen-separated, and unique within the Company. |
+| `description` | String | Required | Customer-facing explanation of the Catalogue. | Must describe the catalogue publication, not duplicate Product, Category, or Collection descriptions. |
+| `catalogueType` | Controlled String | Required | Broad classification of the Catalogue. | Suggested values: `productCatalogue`, `categoryCatalogue`, `collectionCatalogue`, `roomCatalogue`, `seasonalCatalogue`, `brandCatalogue`, `serviceCatalogue`, `digitalCatalogue`, `other`. |
+| `status` | Controlled String | Required | Lifecycle status of the Catalogue. | Suggested values: `draft`, `active`, `inactive`, `archived`, `discontinued`. |
+| `createdAt` | ISO 8601 Date String | Required | Date and time when the Catalogue was created. | Must use ISO 8601 format. |
+| `updatedAt` | ISO 8601 Date String | Required | Date and time when the Catalogue was last updated. | Must use ISO 8601 format and update whenever Catalogue data changes. |
+
+---
+
+### 4. Optional Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `publicId` | String | Optional | Customer-safe identifier for public references. | Must not expose internal sequencing or sensitive data. |
+| `displayName` | String | Optional | Alternate customer-facing Catalogue name. | Should be used only when different from `name`. |
+| `shortDescription` | String | Optional | Brief summary for catalogue cards, search results, or featured sections. | Should remain concise and catalogue-specific. |
+| `subtitle` | String | Optional | Supporting catalogue subtitle. | Must add publication context without duplicating the name. |
+| `publicationYear` | Number | Optional | Year the Catalogue is intended for. | Must be a valid four-digit year when used. |
+| `publicationDate` | ISO 8601 Date String | Optional | Date when the Catalogue was published or released. | Must use ISO 8601 format. |
+| `validFrom` | ISO 8601 Date String | Optional | Date from which the Catalogue is valid or visible. | Must use ISO 8601 format. |
+| `validTo` | ISO 8601 Date String | Optional | Date until which the Catalogue is valid or promoted. | Must be later than `validFrom` when both are present. |
+| `categoryIds` | Array of UUID Strings | Optional | References to Categories represented in the Catalogue. | Must reference valid Category entities. |
+| `collectionIds` | Array of UUID Strings | Optional | References to Collections represented in the Catalogue. | Must reference valid Collection entities. |
+| `productIds` | Array of UUID Strings | Optional | References to Products represented in the Catalogue. | Must reference valid Product entities. Catalogue must not embed Product data. |
+| `materialIds` | Array of UUID Strings | Optional | References to Materials highlighted in the Catalogue. | Must reference valid Material entities. |
+| `finishIds` | Array of UUID Strings | Optional | References to Finishes highlighted in the Catalogue. | Must reference valid Finish entities. |
+| `roomSpaceTypeIds` | Array of UUID Strings | Optional | References to Room / Space Types represented in the Catalogue. | Must reference valid Room / Space Type entities when introduced. |
+| `customerSegmentIds` | Array of UUID Strings | Optional | References to customer segments the Catalogue is intended for. | Must reference valid Customer Segment entities when used. |
+| `primaryMediaReference` | Media Reference Object | Optional | Primary catalogue document, usually the main PDF or digital catalogue asset. | Must use the Media Reference value object. |
+| `coverMediaReference` | Media Reference Object | Optional | Catalogue cover image. | Must reference a valid image Media Asset. |
+| `thumbnailMediaReference` | Media Reference Object | Optional | Small preview image used in cards or lists. | Must reference a valid image Media Asset. |
+| `mediaReferences` | Array of Media Reference Objects | Optional | Catalogue PDFs, images, downloadable files, videos, or future digital formats. | Must use Media Reference value objects instead of direct file paths. |
+| `downloadOptions` | Array of Objects | Optional | Customer-facing downloadable format options. | Should reference Media Assets and must not store raw document paths. |
+| `viewerSettings` | Object | Optional | Presentation-independent catalogue viewing preferences. | Must not contain implementation-specific viewer logic. |
+| `languageCode` | String | Optional | Primary language of the Catalogue. | Should follow the approved localization strategy, such as `en-IN`. |
+| `availableLanguageCodes` | Array of Strings | Optional | Languages available for this Catalogue. | Values should follow approved locale naming. |
+| `searchKeywords` | Array of Strings | Optional | Additional searchable terms for the Catalogue. | Should support discovery without replacing structured relationships. |
+| `filterTags` | Array of Strings | Optional | Catalogue-specific filter values. | Should use consistent normalized terms. |
+| `seoMetadata` | SEO Metadata Object | Optional | SEO information for a public Catalogue page. | Must use the shared SEO Metadata value object. |
+| `visibilitySettings` | Visibility Settings Object | Optional | Controls visibility, featured state, and display ordering. | Must use the shared Visibility Settings value object. |
+| `localizations` | Array of Localization Text Objects | Optional | Future translations for Catalogue content. | Must follow the approved localization strategy. |
+| `versionInformation` | Version Information Object | Optional | Tracks Catalogue revisions, publication versions, and historical changes. | Must follow the approved versioning strategy when used. |
+| `metadata` | Object | Optional | Non-critical extensibility data. | Must not contain business-critical fields, Product data, document file paths, or storage-provider logic. |
+| `isDeleted` | Boolean | Optional | Soft deletion flag. | Must default to `false` when used. |
+| `deletedAt` | ISO 8601 Date String | Optional | Date and time when the Catalogue was soft deleted. | Required only when `isDeleted` is `true`. |
+
+---
+
+### 5. Relationships
+
+- Catalogue belongs to one Company through `companyId`.
+- Catalogue may reference multiple Categories through `categoryIds`.
+- Catalogue may reference multiple Collections through `collectionIds`.
+- Catalogue may reference multiple Products through `productIds`.
+- Catalogue may reference multiple Materials through `materialIds`.
+- Catalogue may reference multiple Finishes through `finishIds`.
+- Catalogue may reference multiple Room / Space Types through `roomSpaceTypeIds`.
+- Catalogue may reference multiple Customer Segments through `customerSegmentIds`.
+- Catalogue references PDF documents, cover images, thumbnails, videos, and downloadable assets through Media References.
+- Products, Categories, and Collections may be associated with Catalogues through these relationship references, but Catalogue does not own them.
+- Wishlist items may reference Catalogue through `catalogueId`.
+- Enquiries and Design Your Space Requests may reference Catalogue through `catalogueId` or `catalogueIds`.
+
+Catalogue does not embed Product, Category, Collection, or document data.
+
+---
+
+### 6. Business Rules
+
+- A Catalogue must represent the business publication, not the PDF file.
+- PDF files, images, thumbnails, and downloadable documents must be represented through Media References.
+- A Catalogue must not store raw file paths.
+- A Catalogue must not own Products, Categories, Collections, Materials, or Finishes.
+- Products, Categories, and Collections must remain independent business entities.
+- Catalogue relationships must use references rather than embedded entities.
+- Catalogue content must not duplicate full Product, Category, or Collection data.
+- Catalogue version history must be handled through `versionInformation`.
+- A new edition of a Catalogue may be represented as a new version when the business publication is substantially revised.
+- Archived Catalogues should remain available for historical Wishlist, Enquiry, or quotation references when needed.
+- Catalogue visibility must be controlled through status and Visibility Settings.
+- Catalogue media must support cloud-hosted assets.
+- Embedded PDF viewing must depend on Media References, not on the Catalogue entity storing viewer logic.
+- Soft-deleted Catalogues must not appear in public browsing unless explicitly restored.
+
+---
+
+### 7. Shared Value Objects Used
+
+- Media Reference
+- SEO Metadata
+- Visibility Settings
+- Localization Text
+- Version Information
+
+---
+
+### 8. Future Expansion
+
+The Catalogue model supports future growth without redesign by allowing:
+
+- Embedded PDF viewing.
+- Cloud-hosted PDF documents.
+- Catalogue cover images and thumbnails.
+- Multiple downloadable formats.
+- Digital catalogues beyond PDF.
+- Video catalogues.
+- Interactive catalogue experiences.
+- Multiple language editions.
+- Versioned catalogue publishing.
+- CMS-managed catalogue workflows.
+- Catalogue-specific SEO.
+- Search and filters.
+- Catalogue relationships with Products, Categories, Collections, Materials, Finishes, and Room / Space Types.
+- Wishlist, enquiry, and Design Your Space Request references.
+
+Future entities such as Digital Catalogue Page, Catalogue Section, Catalogue Download, CMS Publishing Workflow, Cloud Storage Asset, Translation Record, and Analytics Event can reference Catalogue without changing the core Catalogue model.
+
+---
+
+### 9. Example JSON
+
+```json
+{
+  "id": "9f3b2c71-6d84-4f29-9b18-2c4e7a91d502",
+  "publicId": "catalogue-sfg-modular-kitchen-2026",
+  "companyId": "2a7c91e5-4d8f-4c21-9f62-6e39d8a4f101",
+  "name": "Modular Kitchen Catalogue 2026",
+  "slug": "modular-kitchen-catalogue-2026",
+  "description": "A curated catalogue showcasing modular kitchen designs, finishes, storage ideas, and custom furniture solutions by Star Furniture Goa.",
+  "catalogueType": "categoryCatalogue",
+  "subtitle": "Premium kitchen designs for modern homes",
+  "publicationYear": 2026,
+  "publicationDate": "2026-07-11T00:00:00+05:30",
+  "validFrom": "2026-07-11T00:00:00+05:30",
+  "validTo": null,
+  "categoryIds": [
+    "category-modular-kitchens"
+  ],
+  "collectionIds": [
+    "collection-modern-kitchens",
+    "collection-luxury-kitchens"
+  ],
+  "productIds": [
+    "product-premium-modular-kitchen",
+    "product-compact-modular-kitchen"
+  ],
+  "materialIds": [
+    "material-sfg-plywood-premium",
+    "material-sfg-engineered-wood"
+  ],
+  "finishIds": [
+    "finish-sfg-walnut-matte",
+    "finish-sfg-white-matte"
+  ],
+  "roomSpaceTypeIds": [
+    "room-space-kitchen"
+  ],
+  "customerSegmentIds": [
+    "customer-segment-homeowners",
+    "customer-segment-interior-designers"
+  ],
+  "primaryMediaReference": {
+    "mediaAssetId": "media-modular-kitchen-catalogue-2026-pdf",
+    "mediaType": "pdf",
+    "altText": "Modular Kitchen Catalogue 2026 PDF",
+    "displayOrder": 1,
+    "isPrimary": true
+  },
+  "coverMediaReference": {
+    "mediaAssetId": "media-modular-kitchen-catalogue-2026-cover",
+    "mediaType": "image",
+    "altText": "Cover image for Modular Kitchen Catalogue 2026",
+    "displayOrder": 1,
+    "isPrimary": true
+  },
+  "thumbnailMediaReference": {
+    "mediaAssetId": "media-modular-kitchen-catalogue-2026-thumbnail",
+    "mediaType": "image",
+    "altText": "Thumbnail for Modular Kitchen Catalogue 2026",
+    "displayOrder": 1,
+    "isPrimary": false
+  },
+  "mediaReferences": [
+    {
+      "mediaAssetId": "media-modular-kitchen-catalogue-2026-pdf",
+      "mediaType": "pdf",
+      "altText": "Modular Kitchen Catalogue 2026 PDF",
+      "displayOrder": 1,
+      "isPrimary": true
+    },
+    {
+      "mediaAssetId": "media-modular-kitchen-catalogue-2026-cover",
+      "mediaType": "image",
+      "altText": "Cover image for Modular Kitchen Catalogue 2026",
+      "displayOrder": 2,
+      "isPrimary": false
+    }
+  ],
+  "downloadOptions": [
+    {
+      "label": "Download PDF",
+      "mediaAssetId": "media-modular-kitchen-catalogue-2026-pdf",
+      "format": "pdf",
+      "isAvailable": true
+    }
+  ],
+  "viewerSettings": {
+    "supportsEmbeddedViewing": true,
+    "preferredViewerMode": "document",
+    "allowDownload": true
+  },
+  "languageCode": "en-IN",
+  "availableLanguageCodes": [
+    "en-IN"
+  ],
+  "searchKeywords": [
+    "modular kitchen catalogue",
+    "kitchen furniture",
+    "kitchen designs",
+    "custom kitchen Goa",
+    "premium kitchen catalogue"
+  ],
+  "filterTags": [
+    "modular-kitchen",
+    "kitchen",
+    "catalogue",
+    "premium",
+    "2026"
+  ],
+  "seoMetadata": {
+    "metaTitle": "Modular Kitchen Catalogue 2026 | Star Furniture Goa",
+    "metaDescription": "Explore the Modular Kitchen Catalogue 2026 from Star Furniture Goa, featuring premium kitchen designs, finishes, and custom furniture solutions.",
+    "canonicalUrl": null,
+    "ogImageMediaReference": {
+      "mediaAssetId": "media-modular-kitchen-catalogue-2026-cover",
+      "mediaType": "image",
+      "altText": "Modular Kitchen Catalogue 2026 cover",
+      "displayOrder": 1,
+      "isPrimary": true
+    }
+  },
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "visible"
+  },
+  "localizations": [],
+  "versionInformation": {
+    "version": 1,
+    "versionLabel": "2026 First Edition",
+    "versionStatus": "published",
+    "effectiveFrom": "2026-07-11T00:00:00+05:30",
+    "effectiveTo": null,
+    "changeSummary": "Initial published catalogue edition."
+  },
+  "metadata": {},
+  "status": "active",
+  "createdAt": "2026-07-11T00:00:00+05:30",
+  "updatedAt": "2026-07-11T00:00:00+05:30",
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
 ---
 
 # Relationship Summary
