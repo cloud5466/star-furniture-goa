@@ -3075,6 +3075,486 @@ Categories, Collections, Materials, Finishes, Catalogues, and Brand should conti
   "deletedAt": null
 }
 ```
+## Product Variant Entity Model
+
+### 1. Purpose
+
+The Product Variant entity represents a specific configuration of a single Product.
+
+A Product Variant is not a separate Product. It exists only to describe configuration-specific differences such as material, finish, size, layout, accessories, availability, or manufacturing options.
+
+Each Product Variant must belong to exactly one Product.
+
+### 2. Responsibilities
+
+The Product Variant entity is responsible for:
+
+- Defining configuration-specific options for a Product.
+- Representing differences in material, finish, measurement, layout, or accessories.
+- Supporting variant selection on product detail pages.
+- Supporting wishlist, enquiry, and future quotation flows at a specific configuration level.
+- Supporting variant-specific availability.
+- Supporting display ordering of variants.
+- Supporting future pricing references without owning pricing logic.
+- Supporting future manufacturing configuration data.
+
+The Product Variant entity is not responsible for:
+
+- Product-level name, description, category, or collection ownership.
+- Brand identity.
+- Company ownership.
+- Catalogue ownership.
+- Material or finish definitions.
+- Pricing calculations.
+- Warranty policy definitions.
+
+---
+
+### 3. Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the Product Variant. | Must be globally unique and immutable. |
+| `productId` | UUID String | Required | Reference to the Product this variant belongs to. | Must reference one valid Product. A Product Variant cannot exist without a Product. |
+| `name` | String | Required | Variant name describing the specific configuration. | Must be clear, customer-readable, and unique within the same Product. |
+| `slug` | String | Required | Product-scoped slug for identifying the variant. | Must be URL-safe, lowercase, hyphen-separated, and unique within the parent Product. |
+| `description` | String | Required | Configuration-specific description for the variant. | Must describe only variant-level differences and must not repeat the full Product description. |
+| `variantType` | Controlled String | Required | Defines the primary type of variation. | Suggested values: `material`, `finish`, `size`, `layout`, `configuration`, `package`, `custom`. |
+| `status` | Controlled String | Required | Lifecycle status of the Product Variant. | Suggested values: `active`, `inactive`, `draft`, `archived`, `discontinued`. |
+| `createdAt` | ISO 8601 Date String | Required | Date and time when the variant was created. | Must use ISO 8601 format. |
+| `updatedAt` | ISO 8601 Date String | Required | Date and time when the variant was last updated. | Must use ISO 8601 format and update whenever variant data changes. |
+
+---
+
+### 4. Optional Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `publicId` | String | Optional | Customer-safe identifier for public references. | Must not expose internal sequencing or sensitive data. |
+| `displayName` | String | Optional | Alternate customer-facing variant label. | Should be used only when different from `name`. |
+| `shortDescription` | String | Optional | Brief summary for cards, selectors, or comparison views. | Should remain concise and variant-specific. |
+| `materialIds` | Array of UUID Strings | Optional | References to Materials used by this variant. | Must reference valid Material entities. Materials must not be embedded. |
+| `finishIds` | Array of UUID Strings | Optional | References to Finishes available for this variant. | Must reference valid Finish entities. Finishes must not be embedded. |
+| `measurements` | Array of Measurement Objects | Optional | Variant-specific dimensions or size options. | Must use the shared Measurement value object. |
+| `configurationOptions` | Object | Optional | Structured variant configuration details such as door count, layout, shutter type, storage layout, or mirror option. | Must contain only configuration-specific attributes. |
+| `accessoryIds` | Array of UUID Strings | Optional | References to optional or included Accessories. | Must reference valid future Accessory entities when introduced. |
+| `accessoryNotes` | String | Optional | Notes describing accessory availability or inclusion. | Must not replace formal accessory references once accessory entities exist. |
+| `availabilityStatus` | Controlled String | Optional | Availability of this specific variant. | Suggested values: `available`, `madeToOrder`, `onRequest`, `unavailable`, `discontinued`. |
+| `availabilityNotes` | String | Optional | Additional availability explanation. | Should be customer-readable and variant-specific. |
+| `isQuotationRequired` | Boolean | Optional | Indicates whether this variant requires a quotation. | Must use boolean naming convention. |
+| `pricingReferenceId` | UUID String | Optional | Reference to a future pricing model or pricing record. | Must not contain pricing calculations directly. |
+| `pricingDisplayText` | String | Optional | Simple customer-facing pricing message. | Should avoid complex pricing rules. |
+| `warrantyPolicyIds` | Array of UUID Strings | Optional | References to variant-specific warranty policies if they differ from the Product. | Should only be used when warranty differs from the Product-level warranty. |
+| `manufacturingConfiguration` | Object | Optional | Future-ready configuration details required for manufacturing workflows. | Must remain configuration-specific and must not duplicate Product data. |
+| `mediaReferences` | Array of Media Reference Objects | Optional | Variant-specific images, videos, or visual references. | Must use Media Reference value objects instead of file paths. |
+| `comparisonAttributes` | Object | Optional | Structured attributes used for product or variant comparison. | Must contain only stable comparison-friendly values. |
+| `searchKeywords` | Array of Strings | Optional | Additional searchable terms for this variant. | Should support discovery without duplicating unrelated Product keywords. |
+| `filterTags` | Array of Strings | Optional | Variant-specific filter values. | Should be normalized where possible for consistent filtering. |
+| `visibilitySettings` | Visibility Settings Object | Optional | Controls visibility, featured state, and display ordering. | Must use the shared Visibility Settings value object. |
+| `localizations` | Array of Localization Text Objects | Optional | Future translations for variant-specific customer-facing text. | Must follow the approved localization strategy. |
+| `versionInformation` | Version Information Object | Optional | Tracks future variant revisions. | Required if variant configuration changes need historical tracking. |
+| `metadata` | Object | Optional | Non-critical extensibility data. | Must not contain business-critical fields. |
+| `isDeleted` | Boolean | Optional | Soft deletion flag. | Must default to `false` when used. |
+| `deletedAt` | ISO 8601 Date String | Optional | Date and time when the variant was soft deleted. | Required only when `isDeleted` is `true`. |
+
+---
+
+### 5. Relationships
+
+- Product Variant belongs to exactly one Product through `productId`.
+- Product owns all shared product information.
+- Product Variant owns only configuration-specific differences.
+- Product Variant references Materials through `materialIds`.
+- Product Variant references Finishes through `finishIds`.
+- Product Variant may reference future Accessories through `accessoryIds`.
+- Product Variant may reference warranty policies through `warrantyPolicyIds` only when the variant warranty differs from the Product.
+- Product Variant may be referenced by Wishlist items through `productVariantId`.
+- Product Variant may be referenced by future enquiries, quotations, or manufacturing workflows.
+- Product Variant references Media Assets through `mediaReferences`.
+
+---
+
+### 6. Business Rules
+
+- A Product Variant must belong to exactly one Product.
+- A Product Variant cannot exist independently of a Product.
+- A Product Variant must not duplicate Product-level category, collection, company, or brand information.
+- A Product Variant must describe only configuration-specific differences.
+- Materials and Finishes must be referenced, not embedded.
+- Measurements must use the shared Measurement value object.
+- Variant media must use Media References instead of direct file paths.
+- Variant availability must not override Product status unless explicitly handled through `availabilityStatus`.
+- Pricing logic must not be stored directly in the Product Variant.
+- If a variant is discontinued, it should remain available for historical wishlist, enquiry, or quotation references.
+- Slugs must be unique within the parent Product.
+- Soft-deleted variants must not appear in customer-facing browsing unless explicitly restored.
+
+---
+
+### 7. Shared Value Objects Used
+
+- Measurement
+- Media Reference
+- Visibility Settings
+- Localization Text
+- Version Information
+
+---
+
+### 8. Future Expansion
+
+The Product Variant model supports future growth without redesign by allowing:
+
+- Variant-specific pricing references.
+- Quotation-specific variant selection.
+- Manufacturing-ready configuration details.
+- Custom layout definitions.
+- Accessory references.
+- Variant-specific media galleries.
+- Variant comparison views.
+- Historical configuration versioning.
+- Future CMS-managed variant ordering and visibility.
+- Future search and filter expansion through keywords and filter tags.
+
+Future entities such as Pricing, Accessory, Material, Finish, Quotation, and Manufacturing Configuration can reference or be referenced by Product Variant without changing the core ownership model.
+
+---
+
+### 9. Example JSON
+
+```json
+{
+  "id": "8f9a7c2e-4d61-4b9f-9c82-64f2b6d4a901",
+  "publicId": "variant-sfg-wardrobe-001",
+  "productId": "3b7d91e4-2a44-4f32-94c6-8e7d2a91c113",
+  "name": "Plywood White Matte 3-Door Layout",
+  "slug": "plywood-white-matte-3-door-layout",
+  "description": "A plywood configuration with a white matte finish and a spacious 3-door wardrobe layout.",
+  "variantType": "configuration",
+  "materialIds": [
+    "material-plywood-premium"
+  ],
+  "finishIds": [
+    "finish-white-matte"
+  ],
+  "measurements": [
+    {
+      "label": "Standard Size",
+      "width": 72,
+      "height": 84,
+      "depth": 24,
+      "unit": "inches"
+    }
+  ],
+  "configurationOptions": {
+    "doorCount": 3,
+    "doorType": "hinged",
+    "includesMirror": false,
+    "internalStorageLayout": "shelves-and-hanging"
+  },
+  "accessoryIds": [],
+  "accessoryNotes": "Additional drawers, mirrors, and internal organizers can be added during quotation.",
+  "availabilityStatus": "madeToOrder",
+  "availabilityNotes": "Manufactured after design confirmation and measurement approval.",
+  "isQuotationRequired": true,
+  "pricingReferenceId": null,
+  "pricingDisplayText": "Price available on request",
+  "warrantyPolicyIds": [
+    "warranty-plywood-25-years"
+  ],
+  "manufacturingConfiguration": {
+    "requiresSiteMeasurement": true,
+    "supportsCustomDimensions": true,
+    "productionType": "custom-manufactured"
+  },
+  "mediaReferences": [
+    {
+      "mediaAssetId": "media-white-matte-wardrobe-variant",
+      "mediaType": "image",
+      "altText": "White matte 3-door plywood wardrobe variant",
+      "displayOrder": 1,
+      "isPrimary": true
+    }
+  ],
+  "comparisonAttributes": {
+    "material": "Plywood",
+    "finish": "White Matte",
+    "doorCount": "3 Door",
+    "customizable": "Yes"
+  },
+  "searchKeywords": [
+    "plywood wardrobe",
+    "white matte wardrobe",
+    "3 door wardrobe",
+    "custom wardrobe"
+  ],
+  "filterTags": [
+    "plywood",
+    "white-matte",
+    "3-door",
+    "made-to-order"
+  ],
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": false,
+    "displayOrder": 2,
+    "visibilityStatus": "visible"
+  },
+  "versionInformation": {
+    "version": 1,
+    "versionLabel": "Initial Variant",
+    "versionStatus": "published",
+    "effectiveFrom": "2026-07-11T00:00:00+05:30",
+    "effectiveTo": null,
+    "changeSummary": "Initial product variant configuration."
+  },
+  "metadata": {},
+  "status": "active",
+  "createdAt": "2026-07-11T00:00:00+05:30",
+  "updatedAt": "2026-07-11T00:00:00+05:30",
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
+## Material Entity Model
+
+### 1. Purpose
+
+The Material entity represents a reusable furniture material used across Products and Product Variants.
+
+A Material is a shared business resource that describes what furniture can be made from, such as Premium Plywood, Engineered Wood, MDF, HDF, Laminates, Glass, Acrylic, or Metal Hardware.
+
+Products and Product Variants reference Materials through `materialIds`.
+
+A Material must not own Products or Product Variants.
+
+---
+
+### 2. Responsibilities
+
+The Material entity is responsible for:
+
+- Defining reusable material information.
+- Supporting product and variant material references.
+- Supporting material-based search and filters.
+- Communicating durability, quality, care, and maintenance information.
+- Supporting warranty compatibility.
+- Supporting sustainability and certification information.
+- Supporting future supplier and inventory integrations.
+- Providing customer-facing material education where appropriate.
+
+The Material entity is not responsible for:
+
+- Owning Products.
+- Owning Product Variants.
+- Owning Finishes.
+- Defining pricing logic.
+- Defining inventory quantities.
+- Defining supplier business details.
+- Replacing Product or Product Variant descriptions.
+
+---
+
+### 3. Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the Material. | Must be globally unique and immutable. |
+| `companyId` | UUID String | Required | Reference to the Company that owns this Material definition. | Must reference one valid Company. |
+| `name` | String | Required | Material name. | Must be clear, customer-readable, and unique within the Company. |
+| `slug` | String | Required | SEO-friendly and URL-safe material identifier. | Must be lowercase, hyphen-separated, and unique within the Company. |
+| `description` | String | Required | Customer-facing explanation of the Material. | Must describe the material itself, not specific Products using it. |
+| `materialType` | Controlled String | Required | Broad classification of the Material. | Suggested values: `plywood`, `engineeredWood`, `mdf`, `hdf`, `laminate`, `glass`, `acrylic`, `metal`, `hardware`, `fabric`, `stone`, `other`. |
+| `status` | Controlled String | Required | Lifecycle status of the Material. | Suggested values: `active`, `inactive`, `draft`, `archived`, `discontinued`. |
+| `createdAt` | ISO 8601 Date String | Required | Date and time when the Material was created. | Must use ISO 8601 format. |
+| `updatedAt` | ISO 8601 Date String | Required | Date and time when the Material was last updated. | Must use ISO 8601 format and update whenever Material data changes. |
+
+---
+
+### 4. Optional Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `publicId` | String | Optional | Customer-safe identifier for public references. | Must not expose internal sequencing or sensitive data. |
+| `displayName` | String | Optional | Alternate customer-facing Material name. | Should be used only when different from `name`. |
+| `shortDescription` | String | Optional | Brief summary for filters, cards, or comparison views. | Should remain concise and material-specific. |
+| `materialCategory` | Controlled String | Optional | Higher-level grouping for browsing or filtering Materials. | Suggested values: `woodBased`, `surfaceFinish`, `decorative`, `structural`, `hardware`, `glassAndAcrylic`, `metal`, `other`. |
+| `grade` | String | Optional | Material grade or quality classification. | Should use consistent business-approved naming. |
+| `durabilityInformation` | String | Optional | Explanation of strength, expected performance, or usage suitability. | Must describe Material durability without making unsupported claims. |
+| `durabilityRating` | Number | Optional | Simple internal or customer-facing durability score. | Should use a consistent scale if used, such as 1 to 5. |
+| `careInstructions` | String | Optional | Instructions for cleaning and maintaining the Material. | Must be customer-readable and practical. |
+| `sustainabilityInformation` | String | Optional | Sustainability, eco-conscious, or sourcing-related information. | Should be factual and avoid unsupported claims. |
+| `certificationInformation` | Array of Objects | Optional | Certification or compliance details related to the Material. | Should include only material-level certifications. |
+| `warrantyPolicyIds` | Array of UUID Strings | Optional | References to Warranty Policies compatible with this Material. | Must reference valid Warranty Policy entities. |
+| `applicableCategoryIds` | Array of UUID Strings | Optional | Categories where this Material is commonly applicable. | Must reference valid Category entities and must not imply ownership of Products. |
+| `compatibleFinishIds` | Array of UUID Strings | Optional | Finishes commonly compatible with this Material. | Must reference valid Finish entities. |
+| `supplierIds` | Array of UUID Strings | Optional | Future references to Suppliers. | Reserved for future supplier integration. |
+| `inventoryReferenceIds` | Array of UUID Strings | Optional | Future references to inventory records or stock systems. | Must not store inventory quantities directly unless inventory modeling is formally introduced. |
+| `mediaReferences` | Array of Media Reference Objects | Optional | Images, swatches, documents, or videos representing the Material. | Must use Media Reference value objects instead of direct file paths. |
+| `searchKeywords` | Array of Strings | Optional | Additional searchable terms for the Material. | Should support discovery without duplicating unrelated Product keywords. |
+| `filterTags` | Array of Strings | Optional | Material-specific filter values. | Should use consistent normalized terms. |
+| `seoMetadata` | SEO Metadata Object | Optional | SEO information for future material education or landing pages. | Must use the shared SEO Metadata value object. |
+| `visibilitySettings` | Visibility Settings Object | Optional | Controls whether the Material appears in filters, pages, or featured sections. | Must use the shared Visibility Settings value object. |
+| `localizations` | Array of Localization Text Objects | Optional | Future translations for Material content. | Must follow the approved localization strategy. |
+| `versionInformation` | Version Information Object | Optional | Tracks future Material revisions. | Required if Material descriptions, certifications, or compatibility rules need historical tracking. |
+| `metadata` | Object | Optional | Non-critical extensibility data. | Must not contain business-critical fields. |
+| `isDeleted` | Boolean | Optional | Soft deletion flag. | Must default to `false` when used. |
+| `deletedAt` | ISO 8601 Date String | Optional | Date and time when the Material was soft deleted. | Required only when `isDeleted` is `true`. |
+
+---
+
+### 5. Relationships
+
+- Material belongs to one Company through `companyId`.
+- Products reference Materials through `materialIds`.
+- Product Variants reference Materials through `materialIds`.
+- Material may reference compatible Warranty Policies through `warrantyPolicyIds`.
+- Material may reference applicable Categories through `applicableCategoryIds`.
+- Material may reference compatible Finishes through `compatibleFinishIds`.
+- Material may reference future Suppliers through `supplierIds`.
+- Material may reference future inventory records through `inventoryReferenceIds`.
+- Material references Media Assets through `mediaReferences`.
+
+Material does not store `productIds` or `productVariantIds`.
+
+Products and Product Variants own their own Material references.
+
+---
+
+### 6. Business Rules
+
+- A Material must represent reusable material information only.
+- A Material must not own Products or Product Variants.
+- Products must reference Materials using `materialIds`.
+- Product Variants must reference Materials using `materialIds`.
+- Material descriptions must not duplicate Product or Product Variant descriptions.
+- Material warranty compatibility must be expressed through `warrantyPolicyIds`.
+- Material media must use Media References instead of direct file paths.
+- Material certifications must describe the Material only, not the Company as a whole.
+- Supplier and inventory references must remain optional until those domains are formally introduced.
+- A discontinued Material should remain available for historical Product, Product Variant, Wishlist, Enquiry, and Quotation references.
+- Soft-deleted Materials must not appear in customer-facing filters unless explicitly restored.
+
+---
+
+### 7. Shared Value Objects Used
+
+- Media Reference
+- SEO Metadata
+- Visibility Settings
+- Localization Text
+- Version Information
+
+---
+
+### 8. Future Expansion
+
+The Material model supports future growth without redesign by allowing:
+
+- Supplier integration through `supplierIds`.
+- Inventory integration through `inventoryReferenceIds`.
+- Material-specific certification tracking.
+- Warranty compatibility mapping.
+- Material education pages.
+- Sustainability information.
+- Material-based search and filtering.
+- Compatibility with Product Variants.
+- Future CMS-managed material visibility and ordering.
+- Future quotation and manufacturing workflows.
+
+Future entities such as Supplier, Inventory Record, Certification, Pricing, Quotation, and Manufacturing Configuration can reference Material without changing the core Material model.
+
+---
+
+### 9. Example JSON
+
+```json
+{
+  "id": "4d9f7b8a-2f34-4f5e-9a61-8c41e2b7d901",
+  "publicId": "material-sfg-plywood-premium",
+  "companyId": "2a7c91e5-4d8f-4c21-9f62-6e39d8a4f101",
+  "name": "Premium Plywood",
+  "slug": "premium-plywood",
+  "description": "High-quality plywood suitable for durable custom furniture, wardrobes, kitchens, and long-lasting interior solutions.",
+  "materialType": "plywood",
+  "materialCategory": "woodBased",
+  "grade": "Premium",
+  "durabilityInformation": "Recommended for furniture that requires strong structural performance and long-term durability.",
+  "durabilityRating": 5,
+  "careInstructions": "Clean with a soft dry or slightly damp cloth. Avoid prolonged exposure to water and harsh chemicals.",
+  "sustainabilityInformation": "Can support responsible sourcing information when supplier certification details are available.",
+  "certificationInformation": [
+    {
+      "name": "Material Quality Certification",
+      "issuer": "Supplier Provided",
+      "referenceNumber": null,
+      "documentMediaReference": null
+    }
+  ],
+  "warrantyPolicyIds": [
+    "warranty-plywood-25-years"
+  ],
+  "applicableCategoryIds": [
+    "category-wardrobes",
+    "category-modular-kitchens",
+    "category-tv-units"
+  ],
+  "compatibleFinishIds": [
+    "finish-white-matte",
+    "finish-walnut",
+    "finish-oak"
+  ],
+  "supplierIds": [],
+  "inventoryReferenceIds": [],
+  "mediaReferences": [
+    {
+      "mediaAssetId": "media-premium-plywood-swatch",
+      "mediaType": "image",
+      "altText": "Premium plywood material swatch",
+      "displayOrder": 1,
+      "isPrimary": true
+    }
+  ],
+  "searchKeywords": [
+    "premium plywood",
+    "plywood furniture",
+    "durable plywood",
+    "custom plywood furniture"
+  ],
+  "filterTags": [
+    "plywood",
+    "premium",
+    "durable",
+    "wood-based"
+  ],
+  "seoMetadata": {
+    "metaTitle": "Premium Plywood Furniture Material",
+    "metaDescription": "Premium plywood used for durable custom wardrobes, kitchens, TV units, and furniture by Star Furniture Goa.",
+    "canonicalUrl": null,
+    "ogImageMediaReference": null
+  },
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "visible"
+  },
+  "versionInformation": {
+    "version": 1,
+    "versionLabel": "Initial Material Definition",
+    "versionStatus": "published",
+    "effectiveFrom": "2026-07-11T00:00:00+05:30",
+    "effectiveTo": null,
+    "changeSummary": "Initial reusable material definition."
+  },
+  "metadata": {},
+  "status": "active",
+  "createdAt": "2026-07-11T00:00:00+05:30",
+  "updatedAt": "2026-07-11T00:00:00+05:30",
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
 
 ---
 
