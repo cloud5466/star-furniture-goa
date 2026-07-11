@@ -6,23 +6,23 @@
 - [x] Architecture
 - [x] Roadmap
 - [x] Domain Model
-- [ ] Data Model
+- [ x] Data Model
 
 ## Entity Models
 
 - [x] Company
-- [ ] Brand
-- [ ] Location
-- [ ] Category
-- [ ] Collection
-- [ ] Product
-- [ ] Product Variant
-- [ ] Media Asset
-- [ ] Catalogue
-- [ ] Wishlist
-- [ ] Review
-- [ ] Enquiry
-- [ ] Design Your Space Request
+- [x] Brand
+- [x] Location
+- [x] Category
+- [x ] Collection
+- [x ] Product
+- [x ] Product Variant
+- [ x] Media Asset
+- [x ] Catalogue
+- [x ] Wishlist
+- [x ] Review
+- [ x] Enquiry
+- [x ] Design Your Space Request
 
 ## UI
 

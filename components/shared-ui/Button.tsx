@@ -1,4 +1,1 @@
-// Defines the shared button primitive.
-export function Button() {
-  return null;
-}
+export { Button, buttonVariants, type ButtonProps } from "@/components/ui/button";
