@@ -2544,6 +2544,538 @@ Products and Catalogues should continue to reference Collection rather than bein
 }
 ```
 
+# Entity Model: Product
+
+## Purpose
+
+The Product entity represents an individual furniture offering provided by Star Furniture Goa.
+
+A Product is the central catalogue entity. It supports customer browsing, product detail pages, product cards, search, filters, wishlists, catalogues, enquiries, and future quotation workflows.
+
+Examples include:
+
+- Verona Sliding Wardrobe
+- Premium Modular Kitchen
+- Executive Office Desk
+- Oak Finish TV Unit
+
+Products belong to one or more Categories and may appear in multiple Collections.
+
+Products reference Categories and Collections through relationships. Products must not own Category, Collection, Brand, Material, Finish, or Catalogue data.
+
+---
+
+## Responsibilities
+
+The Product entity is responsible for:
+
+- Representing one furniture offering or furniture concept.
+- Supporting customer browsing and product discovery.
+- Supporting product detail pages and product cards.
+- Supporting product galleries through Media References.
+- Supporting search and filters through structured references.
+- Supporting Wishlist saving.
+- Supporting Catalogue inclusion.
+- Supporting enquiries and future quotations.
+- Supporting future product comparison.
+- Supporting future AI recommendations.
+- Supporting custom furniture offerings.
+- Supporting future pricing references without embedding pricing logic.
+- Maintaining stable relationships to Categories, Collections, Materials, Finishes, Warranty Policies, and Media Assets.
+
+---
+
+## Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---:|---|---|
+| `id` | UUID String | Required | Internal stable identifier for the Product. | Must be a valid UUID. Must never change after creation. |
+| `companyId` | UUID String | Required | Reference to the Company that owns the Product. | Must reference one valid Company. |
+| `name` | String | Required | Public product name shown to customers. | Must not be empty. Recommended length: 2-140 characters. |
+| `slug` | String | Required | Public URL-safe identifier for the Product. | Must be lowercase, hyphen-separated, and stable. Should not contain spaces or special characters. |
+| `description` | String | Required | Customer-facing explanation of the Product. | Must not be empty. Should describe the product clearly and professionally. |
+| `productType` | Controlled String | Required | Defines the type of product offering. | Must use a controlled value such as `standard`, `custom`, `configurable`, `madeToOrder`, or `concept`. |
+| `categoryIds` | Array of UUID Strings | Required | References to one or more Categories the Product belongs to. | Must contain at least one valid Category reference. |
+| `status` | Controlled String | Required | Lifecycle state of the Product record. | Must use a controlled status value such as `active`, `inactive`, `draft`, or `archived`. |
+| `createdAt` | ISO 8601 Date String | Required | Timestamp when the Product record was created. | Must be a valid ISO 8601 timestamp. |
+| `updatedAt` | ISO 8601 Date String | Required | Timestamp when the Product record was last updated. | Must be a valid ISO 8601 timestamp. Must not be earlier than `createdAt`. |
+
+---
+
+## Optional Fields
+
+| Name | Data Type | Description | Validation Rules |
+|---|---|---|---|
+| `publicId` | String | Safe public-facing identifier if the Product needs to be referenced externally. | Must be stable and unique if used. |
+| `displayName` | String | Customer-facing display name if different from `name`. | Should not conflict with the Product name. |
+| `shortDescription` | String | Short customer-facing summary for cards, previews, and featured sections. | Should be concise and customer-readable. |
+| `collectionIds` | Array of UUID Strings | References to Collections where the Product appears. | Each value must reference a valid Collection. |
+| `brandId` | UUID String | Optional reference to Brand when a Product is tied to a specific sub-brand or campaign identity. | Must reference a valid Brand when provided. Must not duplicate Brand identity fields. |
+| `roomSpaceTypeIds` | Array of UUID Strings | References to Room / Space Types where the Product is commonly used. | Each value must reference a valid Room / Space Type. |
+| `materialIds` | Array of UUID Strings | References to Materials available or commonly used for the Product. | Each value must reference a valid Material. Must not duplicate Material details. |
+| `finishIds` | Array of UUID Strings | References to Finishes available or commonly used for the Product. | Each value must reference a valid Finish. Must not duplicate Finish details. |
+| `warrantyPolicyIds` | Array of UUID Strings | References to Warranty Policies that may apply to the Product. | Each value must reference a valid Warranty Policy. |
+| `defaultMeasurement` | Measurement | General product-level measurement information when applicable. | Should only describe product-level dimensions. Variant-specific measurements should belong to Product Variant. |
+| `isCustomizable` | Boolean | Indicates whether the Product can be customized. | Must be `true` or `false` when provided. |
+| `customizationNotes` | String | Customer-facing notes about customization possibilities. | Should not replace Product Variant, Material, Finish, or Quotation details. |
+| `isQuotationRequired` | Boolean | Indicates whether the Product normally requires a quotation. | Must be `true` or `false` when provided. |
+| `pricingReferenceId` | UUID String | Future reference to a pricing model or pricing configuration if formal pricing is introduced. | Must reference a valid future Pricing entity when provided. Should not embed pricing logic. |
+| `pricingDisplayText` | String | Optional customer-facing pricing guidance. | Should be general and non-binding unless backed by a future pricing model. |
+| `productVariantSummary` | String | Short explanation of available variation options. | Should summarize variants without replacing Product Variant records. |
+| `defaultVariantId` | UUID String | Reference to a default Product Variant if variants are introduced. | Must reference a valid Product Variant when provided. |
+| `relatedProductIds` | Array of UUID Strings | References to related Products for discovery, cross-selling, or recommendations. | Each value must reference a valid Product. Must not include the Product’s own `id`. |
+| `comparisonAttributes` | Object | High-level attributes used for future product comparison. | Should contain customer-facing comparison facts only. Must not duplicate referenced Material, Finish, or Warranty data. |
+| `searchKeywords` | Array of Strings | Search-friendly terms customers may use to find the Product. | Should contain customer-facing search terms. Must not replace structured relationships. |
+| `filterTags` | Array of Strings | Product-level filter and discovery tags. | Should be controlled where possible. Must not duplicate full Category, Collection, Material, or Finish records. |
+| `mediaReferences` | Array of Media Reference | Product-specific media such as gallery images, thumbnails, hero images, videos, or future 360-degree views. | Must reference valid Media Assets. |
+| `seoMetadata` | SEO Metadata | Search and social metadata for a public Product page. | Should follow the SEO Metadata shared value object. |
+| `visibilitySettings` | Visibility Settings | Controls whether the Product is visible, featured, or ordered in business-controlled contexts. | Should support homepage featured products and product ordering. Should not be used for page layout decisions. |
+| `localizations` | Array of Localization Text | Translated customer-facing Product content. | Locale values should follow the approved localization strategy. |
+| `versionInformation` | Version Information | Revision details for Product content if descriptions, availability, or publishing state change over time. | Should follow the approved versioning strategy when used. |
+| `metadata` | Object | Flexible non-primary information for future integrations or migration support. | Must not contain business-critical fields, Company data, Brand identity, Category details, Collection details, Material details, Finish details, Catalogue details, or pricing logic. |
+| `isDeleted` | Boolean | Soft deletion flag. | Should be `false` for active Product records. |
+| `deletedAt` | ISO 8601 Date String | Timestamp for soft deletion. | Required only when `isDeleted` is `true`. |
+
+---
+
+## Relationships
+
+### Company
+
+A Product belongs to exactly one Company.
+
+Relationship field:
+
+- `companyId`
+
+The Company owns the business.  
+The Product represents one business-owned furniture offering.
+
+The Company should not store large Product lists directly. Products should identify their owner through `companyId`.
+
+---
+
+### Categories
+
+A Product belongs to one or more Categories.
+
+Relationship field:
+
+- `categoryIds`
+
+Categories organize Products by broad furniture classification.
+
+The Product references Categories.  
+Categories do not own Products.
+
+---
+
+### Collections
+
+A Product may appear in one or more Collections.
+
+Relationship field:
+
+- `collectionIds`
+
+Collections organize Products by curated discovery paths such as style, use case, room need, campaign, or configuration.
+
+The Product references Collections.  
+Collections do not own Products.
+
+---
+
+### Brand
+
+A Product may optionally reference Brand when it belongs to a specific sub-brand, campaign, or future brand identity.
+
+Relationship field:
+
+- `brandId`
+
+Most Products will inherit the Company’s primary Brand indirectly. Product should not duplicate Brand responsibilities such as logo, colors, typography, tagline, tone of voice, or visual identity.
+
+---
+
+### Materials
+
+A Product may reference one or more Materials.
+
+Relationship field:
+
+- `materialIds`
+
+Materials describe available or commonly used furniture materials.
+
+The Product must reference Materials instead of duplicating Material details.
+
+---
+
+### Finishes
+
+A Product may reference one or more Finishes.
+
+Relationship field:
+
+- `finishIds`
+
+Finishes describe available or commonly used surface styles, colors, textures, and laminates.
+
+The Product must reference Finishes instead of duplicating Finish details.
+
+---
+
+### Warranty Policies
+
+A Product may reference one or more Warranty Policies.
+
+Relationship field:
+
+- `warrantyPolicyIds`
+
+Warranty Policies define warranty coverage and duration.
+
+The Product should reference Warranty Policies instead of duplicating warranty rules.
+
+---
+
+### Room / Space Types
+
+A Product may be associated with one or more Room / Space Types.
+
+Relationship field:
+
+- `roomSpaceTypeIds`
+
+This supports room-based discovery such as kitchen, bedroom, living room, office, or commercial space.
+
+---
+
+### Product Variants
+
+A Product may have Product Variants.
+
+Relationship direction:
+
+- Each Product Variant should reference Product through `productId`.
+
+Optional Product field:
+
+- `defaultVariantId`
+
+The Product should not store large `productVariantIds` arrays. Variant records should identify their parent Product.
+
+---
+
+### Catalogues
+
+A Product may appear in one or more Catalogues.
+
+Relationship direction:
+
+- Each Catalogue may reference Products through `productIds`.
+
+The Product should not store `catalogueIds` because Catalogues may expand, change, and version over time.
+
+---
+
+### Media Assets
+
+A Product may reference multiple Media Assets.
+
+Relationship field:
+
+- `mediaReferences`
+
+Product media may include gallery images, card thumbnails, hero images, videos, PDF-related visuals, 360-degree views, or future virtual tour assets.
+
+The Product should reference Media Assets through Media References instead of storing raw file paths.
+
+---
+
+### Wishlist
+
+A Product may be saved in a Wishlist.
+
+Relationship direction:
+
+- Wishlist items may reference Product through `productId`.
+
+The Product should not store wishlist history directly.
+
+---
+
+### Enquiries
+
+A Product may be referenced by customer Enquiries.
+
+Relationship direction:
+
+- Each Enquiry may reference Product through `productId` or `productIds`.
+
+The Product should not store `enquiryIds` because enquiry volume may grow continuously.
+
+---
+
+### Design Your Space Requests
+
+A Product may be referenced by Design Your Space Requests.
+
+Relationship direction:
+
+- Each Design Your Space Request may reference Product through `productId` or `productIds`.
+
+The Product should not store design request history directly.
+
+---
+
+### Future Quotations
+
+A Product may be referenced by future Quotations.
+
+Relationship direction:
+
+- Each future Quotation may reference Product through `productId` or `productIds`.
+
+The Product should not store `quotationIds` because quotation history may grow continuously.
+
+---
+
+### Related Products
+
+A Product may reference other Products for related product discovery.
+
+Relationship field:
+
+- `relatedProductIds`
+
+This supports cross-selling, product recommendations, product comparison, and future AI recommendations.
+
+Related product references must not duplicate related Product data.
+
+---
+
+## Business Rules
+
+- A Product must belong to exactly one Company.
+- A Product must have a stable internal `id`.
+- A Product must have a valid `companyId`.
+- A Product must have a customer-facing `name`.
+- A Product must have a stable SEO-friendly `slug`.
+- A Product must reference at least one Category through `categoryIds`.
+- A Product may reference multiple Categories when the furniture offering belongs to more than one classification.
+- A Product may reference multiple Collections through `collectionIds`.
+- A Product must not own Category data.
+- A Product must not own Collection data.
+- A Product must not own Brand data.
+- A Product must not own Material data.
+- A Product must not own Finish data.
+- A Product must not own Catalogue data.
+- A Product must reference Materials through `materialIds`.
+- A Product must reference Finishes through `finishIds`.
+- A Product must use Media References for all Product media.
+- A Product must not store raw image paths, raw video paths, or raw catalogue file paths.
+- Product-level `defaultMeasurement` should describe only general product dimensions.
+- Variant-specific dimensions must belong to Product Variant.
+- Product-level pricing fields must remain high-level and must not contain pricing calculation logic.
+- Formal pricing, if introduced, should be represented through a future pricing entity or pricing reference.
+- Product search keywords must support discovery and must not replace structured relationships.
+- Product filter tags must describe product-level discovery only and must not duplicate full Category, Collection, Material, Finish, or Warranty records.
+- Related product relationships must not include the Product itself.
+- A Product must not contain Company responsibilities such as legal identity, business history, contact ownership, locations, warranties ownership, or service ownership.
+- A Product must not contain Brand responsibilities such as logo identity, brand colors, typography, tagline, tone of voice, or visual identity.
+- A Product must not contain Category responsibilities such as broad classification ownership.
+- A Product must not contain Collection responsibilities such as curated grouping ownership.
+- A Product must not contain Catalogue responsibilities such as catalogue files, catalogue versions, or catalogue viewer metadata.
+- Large child relationships such as Wishlists, Enquiries, Catalogues, Design Your Space Requests, and Quotations should reference Product from the child entity.
+- `metadata` must not become a hidden place for core product data.
+- Soft deletion should preserve Product history and must not automatically erase Categories, Collections, Catalogues, Wishlists, Enquiries, or future Quotations.
+- Product status must control whether the Product is considered active, inactive, draft, or archived.
+
+---
+
+## Shared Value Objects Used
+
+The Product entity uses the following Shared Value Objects:
+
+- Measurement
+- Media Reference
+- SEO Metadata
+- Visibility Settings
+- Localization Text
+- Version Information
+
+The Product must not use Address, Contact Information, Business Hours, or Geo Coordinates because those responsibilities belong to Location, Company, Enquiry, or customer intent contexts.
+
+---
+
+## Future Expansion
+
+The Product entity can evolve without breaking compatibility by adding optional fields or relationships rather than changing existing required fields.
+
+Future expansion may include:
+
+- Product detail pages.
+- Product galleries.
+- Product videos.
+- Product 360-degree views.
+- Product variants.
+- Configurable product options.
+- Product comparison.
+- Featured products.
+- Related products.
+- AI-assisted recommendations.
+- Search indexing.
+- Advanced filters.
+- Wishlist persistence.
+- Catalogue inclusion.
+- Custom furniture workflows.
+- Product-specific warranty display.
+- Future pricing references.
+- Future quotation workflows.
+- Future product availability.
+- Future completed project references.
+- Future customer reviews.
+- CMS-managed product publishing.
+- Multilingual product content.
+- Product analytics.
+
+Stable fields such as `id`, `companyId`, `name`, `slug`, `productType`, and `categoryIds` should remain backward compatible.
+
+New product capabilities should be added through optional fields, Shared Value Objects, or references to separate future entities instead of expanding Product into an oversized record.
+
+Categories, Collections, Materials, Finishes, Catalogues, and Brand should continue to be referenced rather than embedded inside Product.
+
+---
+
+## Example JSON
+
+```json
+{
+  "id": "9d4f2d6a-2c1f-48b5-9c34-56c9d2ef1001",
+  "publicId": "sfg-product-verona-sliding-wardrobe",
+  "companyId": "8e2b5c4a-4f6d-4f91-9f9e-2d7c2f36b601",
+  "name": "Verona Sliding Wardrobe",
+  "displayName": "Verona Sliding Wardrobe",
+  "slug": "verona-sliding-wardrobe",
+  "description": "Verona Sliding Wardrobe is a custom wardrobe offering designed for modern bedrooms, smooth sliding access, elegant storage, and durable engineered wood or plywood construction.",
+  "shortDescription": "A modern sliding wardrobe designed for elegant bedroom storage.",
+  "productType": "custom",
+  "categoryIds": [
+    "d21a0f91-3774-4c52-97f9-8932d2dc1001"
+  ],
+  "collectionIds": [
+    "7a2e44d2-2e16-4f20-a214-19fd28f71001"
+  ],
+  "brandId": "f2a3d3d1-4b87-4ef2-9a21-6d5c9e6a1201",
+  "roomSpaceTypeIds": [
+    "c8a14c7f-9113-4b8b-9273-44ffcaad1001"
+  ],
+  "materialIds": [
+    "1a45f4d2-338e-4c48-a557-395e8d881001",
+    "2f89c6c2-7e43-4668-88ab-a23c66ef1001"
+  ],
+  "finishIds": [
+    "7a90dd18-172e-4b08-a7d8-c5a31f1a1001"
+  ],
+  "warrantyPolicyIds": [
+    "e0f89e62-cc5f-4c41-b9f1-f79d2c27a801"
+  ],
+  "defaultMeasurement": {
+    "width": 2400,
+    "height": 2100,
+    "depth": 600,
+    "length": null,
+    "unit": "mm",
+    "area": null,
+    "notes": "Dimensions are customizable based on site measurements.",
+    "measurementType": "productApproximation"
+  },
+  "isCustomizable": true,
+  "customizationNotes": "Can be customized by size, internal storage layout, material, finish, and handle style.",
+  "isQuotationRequired": true,
+  "pricingReferenceId": null,
+  "pricingDisplayText": "Final pricing depends on dimensions, material, finish, internal layout, and installation requirements.",
+  "productVariantSummary": "Available with multiple material, finish, and storage layout configurations.",
+  "defaultVariantId": null,
+  "relatedProductIds": [],
+  "comparisonAttributes": {
+    "storageType": "slidingWardrobe",
+    "recommendedFor": ["bedroom", "apartment", "spaceSavingStorage"],
+    "customizationLevel": "high"
+  },
+  "searchKeywords": [
+    "sliding wardrobe",
+    "custom wardrobe",
+    "bedroom wardrobe",
+    "wardrobe design goa",
+    "space saving wardrobe"
+  ],
+  "filterTags": [
+    "wardrobe",
+    "sliding",
+    "bedroom",
+    "customFurniture",
+    "spaceSaving",
+    "engineeredWood",
+    "plywood"
+  ],
+  "mediaReferences": [
+    {
+      "mediaAssetId": "f81d2c71-9b62-43a7-9f61-726ca9d41001",
+      "role": "productHero",
+      "altText": "Verona sliding wardrobe by Star Furniture Goa",
+      "caption": "Verona Sliding Wardrobe",
+      "displayOrder": 1,
+      "isFeatured": true
+    },
+    {
+      "mediaAssetId": "e24e3d93-7a61-4c5f-9431-371ecfc81001",
+      "role": "productGallery",
+      "altText": "Custom sliding wardrobe interior storage layout",
+      "caption": "Custom wardrobe storage layout",
+      "displayOrder": 2,
+      "isFeatured": false
+    }
+  ],
+  "seoMetadata": {
+    "seoTitle": "Verona Sliding Wardrobe in Goa | Star Furniture Goa",
+    "seoDescription": "Explore the Verona Sliding Wardrobe by Star Furniture Goa, a custom wardrobe solution for modern bedrooms, elegant storage, and space-saving layouts.",
+    "canonicalUrl": "https://starfurnituregoa.com/products/verona-sliding-wardrobe",
+    "ogTitle": "Verona Sliding Wardrobe",
+    "ogDescription": "Custom sliding wardrobe designed for modern bedroom storage.",
+    "ogImageId": "f81d2c71-9b62-43a7-9f61-726ca9d41001",
+    "keywords": [
+      "sliding wardrobe goa",
+      "custom wardrobe goa",
+      "bedroom wardrobe design goa"
+    ]
+  },
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "published"
+  },
+  "versionInformation": {
+    "version": 1,
+    "versionLabel": "Initial Product Definition",
+    "versionStatus": "published",
+    "effectiveFrom": "2026-07-11T00:00:00+05:30",
+    "effectiveTo": null,
+    "changeSummary": "Initial product definition for Verona Sliding Wardrobe."
+  },
+  "status": "active",
+  "createdAt": "2026-07-11T00:00:00+05:30",
+  "updatedAt": "2026-07-11T00:00:00+05:30",
+  "metadata": {
+    "source": "initialDataModel"
+  },
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
+
 ---
 
 # Relationship Summary
