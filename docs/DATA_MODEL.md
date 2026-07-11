@@ -2080,7 +2080,469 @@ Products, Catalogues, and Collections should continue to reference Category rath
 }
 ```
 
+# Entity Model: Collection
 
+## Purpose
+
+The Collection entity represents a curated business grouping of related products.
+
+A Collection is not a Category.
+
+A Category represents a broad furniture classification.  
+A Collection represents a more specific curated grouping, style, use case, campaign, or product discovery path within one or more Categories.
+
+Examples:
+
+Category:
+
+- Wardrobes
+
+Collections:
+
+- Sliding Wardrobes
+- Hinged Wardrobes
+- Walk-in Wardrobes
+
+Category:
+
+- Modular Kitchens
+
+Collections:
+
+- Modern Kitchens
+- Luxury Kitchens
+- Compact Kitchens
+
+Collections are primarily used for customer browsing, product discovery, homepage featured collections, landing pages, category organization, catalogue organization, search, and marketing campaigns.
+
+A Collection must not own Products directly. Products should reference Collection using `collectionIds`.
+
+---
+
+## Responsibilities
+
+The Collection entity is responsible for:
+
+- Representing one curated product discovery group.
+- Helping customers browse related products by style, use case, configuration, lifestyle, room need, or campaign.
+- Supporting homepage featured collections.
+- Supporting collection landing pages.
+- Supporting collection hero banners and thumbnails.
+- Supporting category organization without becoming a Category.
+- Supporting catalogue organization.
+- Supporting search and filters.
+- Supporting marketing campaigns.
+- Supporting seasonal or promotional groupings.
+- Supporting future AI recommendations.
+- Providing a stable discovery reference for Products, Catalogues, Enquiries, Wishlist, and Design Your Space Requests.
+
+---
+
+## Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---:|---|---|
+| `id` | UUID String | Required | Internal stable identifier for the Collection. | Must be a valid UUID. Must never change after creation. |
+| `companyId` | UUID String | Required | Reference to the Company that owns the Collection. | Must reference one valid Company. |
+| `name` | String | Required | Public collection name shown to customers. | Must not be empty. Recommended length: 2-120 characters. |
+| `slug` | String | Required | Public URL-safe identifier for the Collection. | Must be lowercase, hyphen-separated, and stable. Should not contain spaces or special characters. |
+| `description` | String | Required | Customer-facing explanation of the Collection. | Must not be empty. Should describe the collection clearly and professionally. |
+| `collectionType` | Controlled String | Required | Defines the type of curated grouping. | Must use a controlled value such as `styleBased`, `categoryBased`, `roomBased`, `seasonal`, `campaign`, `premium`, or `custom`. |
+| `categoryIds` | Array of UUID Strings | Required | References to one or more Categories this Collection belongs to or supports. | Must contain at least one valid Category reference. |
+| `status` | Controlled String | Required | Lifecycle state of the Collection record. | Must use a controlled status value such as `active`, `inactive`, `draft`, or `archived`. |
+| `createdAt` | ISO 8601 Date String | Required | Timestamp when the Collection record was created. | Must be a valid ISO 8601 timestamp. |
+| `updatedAt` | ISO 8601 Date String | Required | Timestamp when the Collection record was last updated. | Must be a valid ISO 8601 timestamp. Must not be earlier than `createdAt`. |
+
+---
+
+## Optional Fields
+
+| Name | Data Type | Description | Validation Rules |
+|---|---|---|---|
+| `publicId` | String | Safe public-facing identifier if the Collection needs to be referenced externally. | Must be stable and unique if used. |
+| `displayName` | String | Customer-facing display name if different from `name`. | Should not conflict with the Collection name. |
+| `shortDescription` | String | Short customer-facing summary of the Collection. | Should be concise and suitable for cards, previews, or featured sections. |
+| `parentCollectionId` | UUID String | Future reference to a parent Collection if collection grouping is introduced. | Must reference a valid Collection when provided. Must not create circular relationships. |
+| `brandId` | UUID String | Optional reference to Brand when a Collection uses specific brand positioning or campaign identity. | Must reference a valid Brand when provided. Must not duplicate Brand identity fields. |
+| `roomSpaceTypeIds` | Array of UUID Strings | References to Room / Space Types commonly associated with this Collection. | Each value must reference a valid Room / Space Type. |
+| `relatedMaterialIds` | Array of UUID Strings | References to Materials commonly associated with this Collection. | Each value must reference a valid Material. Must not duplicate Material details. |
+| `relatedFinishIds` | Array of UUID Strings | References to Finishes commonly associated with this Collection. | Each value must reference a valid Finish. Must not duplicate Finish details. |
+| `searchKeywords` | Array of Strings | Search-friendly terms customers may use to find this Collection. | Should contain customer-facing search terms. Must not replace structured relationships. |
+| `filterTags` | Array of Strings | Discovery tags used to support collection-level filtering or grouping. | Should be controlled where possible. Must not duplicate Product-specific filters. |
+| `campaignContext` | Object | Optional marketing context for campaign-based or seasonal Collections. | Should describe campaign meaning only. Must not replace Brand, Product, or Catalogue data. |
+| `seasonalContext` | Object | Optional seasonal context for limited-time or theme-based Collections. | Should be used only when seasonality is relevant. |
+| `mediaReferences` | Array of Media Reference | Collection-specific media such as hero banners, thumbnails, lifestyle images, campaign images, or inspiration visuals. | Must reference valid Media Assets. |
+| `seoMetadata` | SEO Metadata | Search and social metadata for a public Collection page. | Should follow the SEO Metadata shared value object. |
+| `visibilitySettings` | Visibility Settings | Controls whether the Collection is visible, featured, or ordered in business-controlled contexts. | Should support homepage featured collections and collection ordering. Should not be used for page layout decisions. |
+| `localizations` | Array of Localization Text | Translated customer-facing Collection content. | Locale values should follow the approved localization strategy. |
+| `versionInformation` | Version Information | Revision details for Collection content if naming, description, campaign context, or publishing status changes over time. | Should follow the approved versioning strategy when used. |
+| `metadata` | Object | Flexible non-primary information for future integrations or migration support. | Must not contain business-critical fields, Company data, Brand identity, Product details, Category details, or Catalogue details. |
+| `isDeleted` | Boolean | Soft deletion flag. | Should be `false` for active Collection records. |
+| `deletedAt` | ISO 8601 Date String | Timestamp for soft deletion. | Required only when `isDeleted` is `true`. |
+
+---
+
+## Relationships
+
+### Company
+
+A Collection belongs to exactly one Company.
+
+Relationship field:
+
+- `companyId`
+
+The Company owns the business.  
+The Collection represents a business-owned curated discovery grouping.
+
+The Company should not store large Collection lists directly. Collections should identify their owner through `companyId`.
+
+---
+
+### Categories
+
+A Collection may belong to one or more Categories.
+
+Relationship field:
+
+- `categoryIds`
+
+This allows a Collection to support one Category or span multiple Categories when needed.
+
+Example:
+
+- A Sliding Wardrobes Collection belongs to Wardrobes.
+- A Luxury Living Collection may reference TV Units, Dining Furniture, and Office Furniture.
+
+Categories do not own Collections.  
+Collections reference Categories.
+
+---
+
+### Parent Collection
+
+A Collection may optionally belong to another Collection.
+
+Relationship field:
+
+- `parentCollectionId`
+
+This supports future grouping such as:
+
+- Wardrobes Collection
+  - Sliding Wardrobes
+  - Hinged Wardrobes
+  - Walk-in Wardrobes
+
+Parent collection relationships should use references and must not duplicate parent collection information.
+
+---
+
+### Brand
+
+A Collection may optionally reference Brand when it needs specific brand positioning, campaign identity, or future sub-brand support.
+
+Relationship field:
+
+- `brandId`
+
+The Collection must not duplicate Brand responsibilities such as logo, colors, typography, tagline, or tone of voice.
+
+---
+
+### Products
+
+Products may belong to one or more Collections.
+
+Relationship direction:
+
+- Each Product should reference Collections through `collectionIds`.
+
+The Collection must not store `productIds` because Product volume can grow over time and Products own their collection references.
+
+---
+
+### Catalogues
+
+Catalogues may reference one or more Collections.
+
+Relationship direction:
+
+- Each Catalogue may reference Collections through `collectionIds`.
+
+The Collection must not store `catalogueIds` because Catalogues may expand, change, and version over time.
+
+---
+
+### Room / Space Types
+
+A Collection may be associated with one or more Room / Space Types.
+
+Relationship field:
+
+- `roomSpaceTypeIds`
+
+This supports room-based browsing, such as bedroom collections, kitchen collections, living room collections, office collections, or commercial space collections.
+
+---
+
+### Materials
+
+A Collection may reference Materials commonly associated with the curated grouping.
+
+Relationship field:
+
+- `relatedMaterialIds`
+
+The Collection should not duplicate Material details.
+
+---
+
+### Finishes
+
+A Collection may reference Finishes commonly associated with the curated grouping.
+
+Relationship field:
+
+- `relatedFinishIds`
+
+The Collection should not duplicate Finish details.
+
+---
+
+### Media Assets
+
+A Collection may reference multiple Media Assets.
+
+Relationship field:
+
+- `mediaReferences`
+
+Collection media may include hero banners, thumbnails, lifestyle visuals, campaign images, inspiration photos, or future collection videos.
+
+The Collection should reference Media Assets through Media References instead of storing raw file paths.
+
+---
+
+### Enquiries
+
+A Collection may be referenced by customer Enquiries.
+
+Relationship direction:
+
+- Each Enquiry may reference Collections through `collectionIds`.
+
+The Collection should not store `enquiryIds` because enquiry volume may grow continuously.
+
+---
+
+### Wishlist
+
+A Collection may be saved in a Wishlist.
+
+Relationship direction:
+
+- Wishlist items may reference Collection through `collectionId`.
+
+The Collection should not store wishlist history directly.
+
+---
+
+### Design Your Space Requests
+
+A Collection may be referenced by Design Your Space Requests.
+
+Relationship direction:
+
+- Each Design Your Space Request may reference Collections through `collectionIds`.
+
+The Collection should not store design request history directly.
+
+---
+
+## Business Rules
+
+- A Collection must belong to exactly one Company.
+- A Collection must have a stable internal `id`.
+- A Collection must have a valid `companyId`.
+- A Collection must have a customer-facing `name`.
+- A Collection must have a stable SEO-friendly `slug`.
+- A Collection must reference at least one Category through `categoryIds`.
+- A Collection must represent a curated discovery grouping, not a broad furniture classification.
+- A Collection must not be treated as a Category.
+- Categories must not own Collections.
+- Collections must reference Categories using `categoryIds`.
+- A Collection must not contain Product details directly.
+- A Collection must not store `productIds`.
+- Products must reference Collections using `collectionIds`.
+- Catalogues must reference Collections using `collectionIds`.
+- Collection-specific media must use Media References.
+- Collection search keywords must support discovery and must not replace structured relationships.
+- Collection filter tags must describe collection-level discovery only and must not duplicate Product-level filter data.
+- Parent collection relationships must not create circular collection trees.
+- A Collection must not contain Company responsibilities such as legal identity, business history, contact ownership, locations, warranties, or service ownership.
+- A Collection must not contain Brand responsibilities such as logo identity, brand colors, typography, tagline, tone of voice, or visual identity.
+- A Collection must not contain Category responsibilities such as being the broad furniture classification source.
+- A Collection must not contain Product responsibilities such as materials, finishes, measurements, variants, warranty policy selection, or product media galleries.
+- Large child relationships such as Products, Catalogues, Enquiries, Wishlists, and Design Your Space Requests should reference Collection from the child entity.
+- `metadata` must not become a hidden place for core collection data.
+- Soft deletion should preserve Collection history and must not automatically erase Products, Categories, Catalogues, Enquiries, Wishlists, or Design Your Space Requests.
+- Collection status must control whether the Collection is considered active, inactive, draft, or archived.
+
+---
+
+## Shared Value Objects Used
+
+The Collection entity uses the following Shared Value Objects:
+
+- Media Reference
+- SEO Metadata
+- Visibility Settings
+- Localization Text
+- Version Information
+
+The Collection must not use Address, Contact Information, Business Hours, Geo Coordinates, or Measurement because those responsibilities belong to Location, Company, Product, Product Variant, Design Your Space Request, or future Quotation contexts.
+
+---
+
+## Future Expansion
+
+The Collection entity can evolve without breaking compatibility by adding optional fields or relationships rather than changing existing required fields.
+
+Future expansion may include:
+
+- Homepage featured collections.
+- Collection landing pages.
+- Collection hero banners.
+- Collection thumbnails.
+- Collection-specific catalogues.
+- Collection-specific SEO.
+- Collection-specific media galleries.
+- Seasonal collections.
+- Campaign-based collections.
+- Premium or luxury collections.
+- Room-based collection browsing.
+- Multi-category collections.
+- Collection-specific recommendations.
+- AI-assisted recommendations.
+- Collection-specific videos.
+- Collection-specific FAQs.
+- CMS-managed collection ordering.
+- Collection publishing workflows.
+- Multilingual collection content.
+- Collection analytics.
+
+Stable fields such as `id`, `companyId`, `name`, `slug`, `collectionType`, and `categoryIds` should remain backward compatible.
+
+New collection capabilities should be added through optional fields, Shared Value Objects, or references to separate future entities instead of expanding Collection into an oversized record.
+
+Products and Catalogues should continue to reference Collection rather than being embedded inside Collection.
+
+---
+
+## Example JSON
+
+```json
+{
+  "id": "7a2e44d2-2e16-4f20-a214-19fd28f71001",
+  "publicId": "sfg-collection-sliding-wardrobes",
+  "companyId": "8e2b5c4a-4f6d-4f91-9f9e-2d7c2f36b601",
+  "name": "Sliding Wardrobes",
+  "displayName": "Sliding Wardrobes",
+  "slug": "sliding-wardrobes",
+  "description": "Sliding Wardrobes is a curated collection of space-saving wardrobe designs built for modern bedrooms, clean layouts, smooth access, and elegant storage.",
+  "shortDescription": "Space-saving wardrobe designs for modern bedrooms.",
+  "collectionType": "categoryBased",
+  "categoryIds": [
+    "d21a0f91-3774-4c52-97f9-8932d2dc1001"
+  ],
+  "parentCollectionId": null,
+  "brandId": "f2a3d3d1-4b87-4ef2-9a21-6d5c9e6a1201",
+  "roomSpaceTypeIds": [
+    "c8a14c7f-9113-4b8b-9273-44ffcaad1001"
+  ],
+  "relatedMaterialIds": [],
+  "relatedFinishIds": [],
+  "searchKeywords": [
+    "sliding wardrobe",
+    "custom sliding wardrobe",
+    "bedroom wardrobe",
+    "space saving wardrobe",
+    "wardrobe design goa"
+  ],
+  "filterTags": [
+    "wardrobe",
+    "bedroom",
+    "spaceSaving",
+    "customFurniture",
+    "engineeredWood",
+    "plywood"
+  ],
+  "campaignContext": {
+    "campaignName": "",
+    "campaignType": "",
+    "campaignMessage": ""
+  },
+  "seasonalContext": {
+    "isSeasonal": false,
+    "seasonName": "",
+    "displayText": ""
+  },
+  "mediaReferences": [
+    {
+      "mediaAssetId": "8f43e0c4-7e4c-4dc1-a951-b65b64f21001",
+      "role": "collectionHero",
+      "altText": "Sliding wardrobe designs by Star Furniture Goa",
+      "caption": "Sliding Wardrobes",
+      "displayOrder": 1,
+      "isFeatured": true
+    },
+    {
+      "mediaAssetId": "a44f6e45-72df-4b2d-8d84-42d6c8e91001",
+      "role": "collectionThumbnail",
+      "altText": "Modern sliding wardrobe with custom storage",
+      "caption": "Custom Sliding Wardrobes",
+      "displayOrder": 2,
+      "isFeatured": false
+    }
+  ],
+  "seoMetadata": {
+    "seoTitle": "Sliding Wardrobes in Goa | Star Furniture Goa",
+    "seoDescription": "Explore custom sliding wardrobe designs by Star Furniture Goa, crafted for modern bedrooms, elegant storage, and space-saving layouts.",
+    "canonicalUrl": "https://starfurnituregoa.com/collections/sliding-wardrobes",
+    "ogTitle": "Sliding Wardrobes",
+    "ogDescription": "Space-saving custom wardrobe designs for modern bedrooms.",
+    "ogImageId": "8f43e0c4-7e4c-4dc1-a951-b65b64f21001",
+    "keywords": [
+      "sliding wardrobes goa",
+      "custom wardrobe goa",
+      "bedroom wardrobe design goa"
+    ]
+  },
+  "visibilitySettings": {
+    "isVisible": true,
+    "isFeatured": true,
+    "displayOrder": 1,
+    "visibilityStatus": "published"
+  },
+  "versionInformation": {
+    "version": 1,
+    "versionLabel": "Initial Collection Definition",
+    "versionStatus": "published",
+    "effectiveFrom": "2026-07-11T00:00:00+05:30",
+    "effectiveTo": null,
+    "changeSummary": "Initial collection definition for Sliding Wardrobes."
+  },
+  "status": "active",
+  "createdAt": "2026-07-11T00:00:00+05:30",
+  "updatedAt": "2026-07-11T00:00:00+05:30",
+  "metadata": {
+    "source": "initialDataModel"
+  },
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
 
 ---
 
