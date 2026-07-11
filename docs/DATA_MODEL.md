@@ -4929,6 +4929,736 @@ Future entities such as Customer Account, Completed Project, Staff User, Moderat
   "deletedAt": null
 }
 ```
+
+## Enquiry Entity Model
+
+### 1. Purpose
+
+The Enquiry entity represents a customer's intent to contact Star Furniture Goa regarding Products, Catalogues, custom furniture, design consultation, quotations, factory visits, or general business questions.
+
+An Enquiry is the primary lead-generation entity of the platform.
+
+An Enquiry may originate from Product pages, Collection pages, Catalogue pages, Wishlist, Design Your Space, Contact page, WhatsApp, Factory information, or general website browsing.
+
+An Enquiry must not own Product, Company, Customer Account, Catalogue, Wishlist, or Design Your Space Request data.
+
+It should reference those business entities where appropriate.
+
+---
+
+### 2. Responsibilities
+
+The Enquiry entity is responsible for:
+
+- Capturing customer contact intent.
+- Capturing customer name and contact information.
+- Capturing preferred contact method.
+- Supporting WhatsApp enquiries.
+- Supporting Product enquiries.
+- Supporting Catalogue enquiries.
+- Supporting Wishlist conversion.
+- Supporting Design Your Space request conversion.
+- Supporting design consultation requests.
+- Supporting factory visit requests.
+- Supporting quotation requests.
+- Referencing multiple related Products, Product Variants, Categories, Collections, or Catalogues.
+- Tracking follow-up status.
+- Supporting internal notes.
+- Supporting future CRM workflows.
+- Supporting future appointment scheduling.
+- Supporting soft deletion and historical lead preservation.
+
+The Enquiry entity is not responsible for:
+
+- Owning Product data.
+- Owning Catalogue data.
+- Owning Wishlist data.
+- Owning Company data.
+- Owning Customer Account data.
+- Owning quotation details.
+- Owning appointment scheduling details.
+- Managing WhatsApp delivery.
+- Managing CRM implementation.
+- Storing full customer account profiles.
+
+---
+
+### 3. Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the Enquiry. | Must be globally unique and immutable. |
+| `companyId` | UUID String | Required | Reference to the Company receiving the Enquiry. | Must reference one valid Company. |
+| `customerName` | String | Required | Name provided by the customer. | Must not be empty. Should be customer-safe and reasonably formatted. |
+| `contactInformation` | Contact Information Object | Required | Customer contact details used for follow-up. | Must use the shared Contact Information value object. Must contain at least one valid contact method. |
+| `preferredContactMethod` | Controlled String | Required | Customer's preferred method of contact. | Suggested values: `whatsapp`, `phone`, `email`, `instagram`, `showroomVisit`, `noPreference`. |
+| `enquiryType` | Controlled String | Required | Primary type of Enquiry. | Suggested values: `product`, `catalogue`, `wishlist`, `designConsultation`, `factoryVisit`, `quotation`, `service`, `general`. |
+| `enquirySourceType` | Controlled String | Required | Where the Enquiry originated. | Suggested values: `productPage`, `collectionPage`, `cataloguePage`, `wishlist`, `designYourSpace`, `contactPage`, `whatsapp`, `factoryInformation`, `generalBrowsing`, `external`. |
+| `message` | String | Required | Customer's enquiry message or request details. | Must contain meaningful customer intent. |
+| `followUpStatus` | Controlled String | Required | Current follow-up state of the Enquiry. | Suggested values: `new`, `contacted`, `followUpScheduled`, `qualified`, `converted`, `closed`, `spam`. |
+| `status` | Controlled String | Required | Lifecycle status of the Enquiry. | Suggested values: `active`, `inactive`, `archived`, `deleted`. |
+| `createdAt` | ISO 8601 Date String | Required | Date and time when the Enquiry was created. | Must use ISO 8601 format. |
+| `updatedAt` | ISO 8601 Date String | Required | Date and time when the Enquiry was last updated. | Must use ISO 8601 format and update whenever Enquiry data changes. |
+
+---
+
+### 4. Optional Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `publicId` | String | Optional | Customer-safe enquiry reference. | Must not expose internal sequencing or sensitive data. |
+| `customerAccountId` | UUID String | Optional | Future reference to a registered Customer Account. | Must reference a valid Customer Account when that entity exists. |
+| `customerSegmentId` | UUID String | Optional | Reference to the customer segment if known. | Must reference a valid Customer Segment when used. |
+| `enquiryChannelId` | UUID String | Optional | Reference to a formal Enquiry Channel entity. | Must reference a valid Enquiry Channel when that entity is introduced. |
+| `productIds` | Array of UUID Strings | Optional | Products related to the Enquiry. | Must reference valid Product entities. Products must not be embedded. |
+| `productVariantIds` | Array of UUID Strings | Optional | Product Variants related to the Enquiry. | Must reference valid Product Variant entities. |
+| `categoryIds` | Array of UUID Strings | Optional | Categories related to the Enquiry. | Must reference valid Category entities. |
+| `collectionIds` | Array of UUID Strings | Optional | Collections related to the Enquiry. | Must reference valid Collection entities. |
+| `catalogueIds` | Array of UUID Strings | Optional | Catalogues related to the Enquiry. | Must reference valid Catalogue entities. |
+| `wishlistId` | UUID String | Optional | Wishlist that generated or influenced the Enquiry. | Must reference a valid Wishlist when present. |
+| `designYourSpaceRequestId` | UUID String | Optional | Design Your Space Request that generated or influenced the Enquiry. | Must reference a valid Design Your Space Request when present. |
+| `serviceOfferingIds` | Array of UUID Strings | Optional | Service Offerings related to the Enquiry. | Must reference valid Service Offering entities. |
+| `locationId` | UUID String | Optional | Location or factory/showroom the customer is interested in visiting. | Must reference a valid Location when present. |
+| `preferredVisitDate` | ISO 8601 Date String | Optional | Customer's preferred date for a factory or showroom visit. | Must use ISO 8601 format when present. |
+| `preferredVisitTimeWindow` | String | Optional | Customer's preferred visit or callback time window. | Should be customer-readable and not replace future Appointment scheduling. |
+| `isFactoryVisitRequested` | Boolean | Optional | Indicates whether the customer requested a factory visit. | Must default to `false` when used. |
+| `isDesignConsultationRequested` | Boolean | Optional | Indicates whether the customer requested design consultation. | Must default to `false` when used. |
+| `isQuotationRequested` | Boolean | Optional | Indicates whether the customer requested a quotation. | Must default to `false` when used. |
+| `budgetRange` | Object | Optional | Customer-provided budget range, if shared. | Must be optional and should not contain formal quotation pricing. |
+| `projectTimeline` | String | Optional | Customer's expected timeline for furniture work. | Should remain customer-intent context only. |
+| `roomSpaceTypeIds` | Array of UUID Strings | Optional | Room or space types related to the Enquiry. | Must reference valid Room / Space Type entities when introduced. |
+| `materialIds` | Array of UUID Strings | Optional | Materials the customer is interested in. | Must reference valid Material entities. |
+| `finishIds` | Array of UUID Strings | Optional | Finishes the customer is interested in. | Must reference valid Finish entities. |
+| `measurementSummary` | String | Optional | Simple customer-provided measurement summary. | Should be brief. Detailed measurements belong in Design Your Space Request or future Quotation. |
+| `mediaReferences` | Array of Media Reference Objects | Optional | Customer-uploaded inspiration images or enquiry-related files. | Must use Media Reference value objects instead of direct file paths. |
+| `originContext` | Object | Optional | Context about where the Enquiry was created. | May include source page, campaign, CTA, referrer, or device context. |
+| `whatsappContext` | Object | Optional | WhatsApp-specific enquiry context. | Must not store private message delivery implementation details or credentials. |
+| `assignedToUserId` | UUID String | Optional | Future reference to a staff or admin user assigned to follow up. | Must reference a valid future user record when introduced. |
+| `internalNotes` | Array of Internal Note Objects | Optional | Business-only notes about follow-up or customer context. | Must not be shown publicly. |
+| `followUpDueAt` | ISO 8601 Date String | Optional | Date and time when follow-up is due. | Must use ISO 8601 format when present. |
+| `lastContactedAt` | ISO 8601 Date String | Optional | Date and time when the customer was last contacted. | Must use ISO 8601 format when present. |
+| `closedAt` | ISO 8601 Date String | Optional | Date and time when the Enquiry was closed. | Required when `followUpStatus` is `closed`. |
+| `closureReason` | String | Optional | Reason the Enquiry was closed. | Should be concise and internal-facing. |
+| `convertedAppointmentId` | UUID String | Optional | Future Appointment created from this Enquiry. | Must reference a valid Appointment when introduced. |
+| `convertedQuotationId` | UUID String | Optional | Future Quotation created from this Enquiry. | Must reference a valid Quotation when introduced. |
+| `crmReferenceId` | String | Optional | Future reference to an external CRM record. | Must not replace the internal `id`. |
+| `consentInformation` | Object | Optional | Customer consent context for contact or follow-up. | Should capture consent source and timestamp where required. |
+| `metadata` | Object | Optional | Non-critical extensibility data. | Must not contain Product data, Catalogue data, Wishlist data, private credentials, or formal quotation details. |
+| `isDeleted` | Boolean | Optional | Soft deletion flag. | Must default to `false` when used. |
+| `deletedAt` | ISO 8601 Date String | Optional | Date and time when the Enquiry was soft deleted. | Required only when `isDeleted` is `true`. |
+
+---
+
+### Internal Note Object
+
+Internal Note is not a standalone entity at this stage.
+
+It belongs inside Enquiry because it exists only as follow-up context for a specific Enquiry.
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the note. | Must be unique within the Enquiry. |
+| `noteText` | String | Required | Internal note content. | Must not be shown publicly. |
+| `createdAt` | ISO 8601 Date String | Required | Date and time when the note was created. | Must use ISO 8601 format. |
+| `createdByUserId` | UUID String | Optional | Future reference to the staff or admin user who created the note. | Must reference a valid future user record when introduced. |
+| `noteType` | Controlled String | Optional | Type of internal note. | Suggested values: `general`, `followUp`, `customerPreference`, `quotation`, `appointment`, `crm`. |
+
+---
+
+### 5. Relationships
+
+- Enquiry belongs to one Company through `companyId`.
+- Enquiry may reference a Customer Account through `customerAccountId`.
+- Enquiry may reference a Customer Segment through `customerSegmentId`.
+- Enquiry may reference an Enquiry Channel through `enquiryChannelId`.
+- Enquiry may reference Products through `productIds`.
+- Enquiry may reference Product Variants through `productVariantIds`.
+- Enquiry may reference Categories through `categoryIds`.
+- Enquiry may reference Collections through `collectionIds`.
+- Enquiry may reference Catalogues through `catalogueIds`.
+- Enquiry may reference a Wishlist through `wishlistId`.
+- Enquiry may reference a Design Your Space Request through `designYourSpaceRequestId`.
+- Enquiry may reference Service Offerings through `serviceOfferingIds`.
+- Enquiry may reference a Location through `locationId`.
+- Enquiry may reference Materials through `materialIds`.
+- Enquiry may reference Finishes through `finishIds`.
+- Enquiry may reference Room / Space Types through `roomSpaceTypeIds`.
+- Enquiry may later reference a future Appointment through `convertedAppointmentId`.
+- Enquiry may later reference a future Quotation through `convertedQuotationId`.
+- Enquiry may reference Media Assets through `mediaReferences`.
+
+Enquiry must not embed Product, Catalogue, Wishlist, Customer Account, Location, or Company objects.
+
+---
+
+### 6. Business Rules
+
+- An Enquiry must belong to one Company.
+- An Enquiry must capture at least one valid customer contact method.
+- An Enquiry must own only enquiry-specific information.
+- An Enquiry must not own Product, Catalogue, Wishlist, Customer Account, or Company data.
+- Related business entities must be referenced using IDs.
+- If `enquiryType` is `product`, at least one `productId` or `productVariantId` should be present.
+- If `enquiryType` is `catalogue`, at least one `catalogueId` should be present.
+- If `enquiryType` is `wishlist`, `wishlistId` should be present.
+- If `enquiryType` is `designConsultation`, `designYourSpaceRequestId` may be present when the Enquiry originates from Design Your Space.
+- If `enquiryType` is `factoryVisit`, `locationId` or `isFactoryVisitRequested` should be present.
+- If `isQuotationRequested` is `true`, the Enquiry may later create a Quotation, but quotation details must not be stored directly inside Enquiry.
+- If `isFactoryVisitRequested` is `true`, the Enquiry may later create an Appointment, but appointment scheduling details must not be owned by Enquiry.
+- WhatsApp-specific fields must not contain API credentials, delivery tokens, or private integration details.
+- Internal notes must not be shown publicly.
+- `metadata` must not become a hidden place for core Enquiry data.
+- Soft deletion should preserve Enquiry history and must not automatically erase related Products, Catalogues, Wishlists, Design Your Space Requests, Appointments, or Quotations.
+- Enquiry status and follow-up status must control lifecycle and business handling separately.
+
+---
+
+### 7. Shared Value Objects Used
+
+- Contact Information
+- Media Reference
+
+The Enquiry entity follows the global standards for:
+
+- Entity Identifiers
+- Relationship References
+- Audit Fields
+- Status Fields
+- Metadata Fields
+- Soft Deletion
+
+Enquiry intentionally does not use SEO Metadata because enquiries are private lead records and should not be public landing pages.
+
+---
+
+### 8. Future Expansion
+
+The Enquiry model supports future growth without redesign by allowing:
+
+- Customer Account linking.
+- CRM integration.
+- Staff assignment.
+- Follow-up workflows.
+- WhatsApp integration.
+- Online quotation workflows.
+- Appointment scheduling.
+- Factory visit scheduling.
+- Design consultation workflows.
+- Wishlist-to-Enquiry conversion.
+- Design Your Space-to-Enquiry conversion.
+- Product and Catalogue enquiry tracking.
+- Customer segment analysis.
+- Lead pipeline integration.
+- Analytics and conversion reporting.
+
+Future entities such as Customer Account, Appointment, Quotation, Staff User, CRM Record, Lead Pipeline, Follow-up Task, Analytics Event, and Notification Record can reference Enquiry without changing the core Enquiry model.
+
+---
+
+### 9. Example JSON
+
+```json
+{
+  "id": "7e4d2a91-5c83-4f62-9b18-2a6f9c41d502",
+  "publicId": "enquiry-sfg-2026-001",
+  "companyId": "2a7c91e5-4d8f-4c21-9f62-6e39d8a4f101",
+  "customerName": "A. Naik",
+  "contactInformation": {
+    "phone": "+919876543210",
+    "whatsapp": "+919876543210",
+    "email": "customer@example.com",
+    "preferredContactLabel": "WhatsApp"
+  },
+  "preferredContactMethod": "whatsapp",
+  "enquiryType": "wishlist",
+  "enquirySourceType": "wishlist",
+  "message": "I am interested in the saved wardrobe and modular kitchen options. Please contact me for customization and quotation details.",
+  "customerAccountId": null,
+  "customerSegmentId": "customer-segment-homeowners",
+  "enquiryChannelId": "enquiry-channel-whatsapp",
+  "productIds": [
+    "product-verona-sliding-wardrobe",
+    "product-premium-modular-kitchen"
+  ],
+  "productVariantIds": [
+    "variant-plywood-white-matte-3-door-layout"
+  ],
+  "categoryIds": [
+    "category-wardrobes",
+    "category-modular-kitchens"
+  ],
+  "collectionIds": [
+    "collection-modern-kitchens"
+  ],
+  "catalogueIds": [
+    "catalogue-sfg-modular-kitchen-2026"
+  ],
+  "wishlistId": "1c8f92a7-6d43-4a81-8f25-9e3b7d1a5402",
+  "designYourSpaceRequestId": null,
+  "serviceOfferingIds": [
+    "service-custom-furniture-design",
+    "service-on-site-measurement"
+  ],
+  "locationId": "location-sfg-factory-goa",
+  "preferredVisitDate": "2026-07-15T00:00:00+05:30",
+  "preferredVisitTimeWindow": "Afternoon",
+  "isFactoryVisitRequested": true,
+  "isDesignConsultationRequested": true,
+  "isQuotationRequested": true,
+  "budgetRange": {
+    "minimum": 100000,
+    "maximum": 250000,
+    "currency": "INR"
+  },
+  "projectTimeline": "Within the next 2 months",
+  "roomSpaceTypeIds": [
+    "room-space-bedroom",
+    "room-space-kitchen"
+  ],
+  "materialIds": [
+    "material-sfg-plywood-premium"
+  ],
+  "finishIds": [
+    "finish-sfg-walnut-matte",
+    "finish-sfg-white-matte"
+  ],
+  "measurementSummary": "Bedroom wardrobe wall is approximately 8 feet wide. Kitchen measurements need site visit confirmation.",
+  "mediaReferences": [],
+  "originContext": {
+    "sourcePage": "wishlist",
+    "sourceCta": "Enquire on WhatsApp",
+    "referrer": "collections"
+  },
+  "whatsappContext": {
+    "isWhatsAppInitiated": true,
+    "messageTemplate": "wishlist-enquiry",
+    "customerConsentedToWhatsApp": true
+  },
+  "assignedToUserId": null,
+  "internalNotes": [
+    {
+      "id": "internal-note-001",
+      "noteText": "Customer is interested in both wardrobe and kitchen. Follow up with catalogue and factory visit timing.",
+      "createdAt": "2026-07-11T10:30:00+05:30",
+      "createdByUserId": null,
+      "noteType": "followUp"
+    }
+  ],
+  "followUpStatus": "new",
+  "followUpDueAt": "2026-07-12T10:00:00+05:30",
+  "lastContactedAt": null,
+  "closedAt": null,
+  "closureReason": null,
+  "convertedAppointmentId": null,
+  "convertedQuotationId": null,
+  "crmReferenceId": null,
+  "consentInformation": {
+    "hasContactConsent": true,
+    "consentSource": "wishlist-enquiry-form",
+    "consentedAt": "2026-07-11T10:25:00+05:30"
+  },
+  "metadata": {},
+  "status": "active",
+  "createdAt": "2026-07-11T10:25:00+05:30",
+  "updatedAt": "2026-07-11T10:30:00+05:30",
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
+
+## Design Your Space Request Entity Model
+
+### 1. Purpose
+
+The Design Your Space Request entity represents a customer's request for custom furniture planning and design consultation.
+
+It allows customers to describe their room, furniture requirements, measurements, inspiration, preferred materials, finishes, budget, and timeline before requesting a consultation.
+
+A Design Your Space Request is not an Enquiry.
+
+However, it may later generate an Enquiry, Appointment, or Quotation.
+
+The entity must not own Product, Catalogue, Company, Customer Account, or Enquiry data. It should reference business entities where appropriate.
+
+---
+
+### 2. Responsibilities
+
+The Design Your Space Request entity is responsible for:
+
+- Capturing customer design intent.
+- Capturing customer contact information.
+- Capturing room or space requirements.
+- Capturing furniture requirements.
+- Capturing customer-provided measurements.
+- Capturing preferred Materials and Finishes through references.
+- Capturing inspiration images, room photos, and floor plans through Media References.
+- Supporting factory consultation requests.
+- Supporting on-site measurement requests.
+- Supporting design consultation requests.
+- Supporting future Appointment generation.
+- Supporting future Quotation generation.
+- Supporting future AI room recommendations.
+- Supporting future 3D visualization workflows.
+- Preserving customer design request history.
+
+The Design Your Space Request entity is not responsible for:
+
+- Owning Product data.
+- Owning Catalogue data.
+- Owning Company data.
+- Owning Customer Account data.
+- Owning Enquiry data.
+- Owning Appointment scheduling details.
+- Owning Quotation pricing details.
+- Owning AI recommendation logic.
+- Owning 3D visualization output.
+
+---
+
+### 3. Required Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the Design Your Space Request. | Must be globally unique and immutable. |
+| `companyId` | UUID String | Required | Reference to the Company receiving the request. | Must reference one valid Company. |
+| `customerName` | String | Required | Name provided by the customer. | Must not be empty. Should be customer-safe and reasonably formatted. |
+| `contactInformation` | Contact Information Object | Required | Customer contact details used for follow-up. | Must use the shared Contact Information value object. Must contain at least one valid contact method. |
+| `preferredContactMethod` | Controlled String | Required | Customer's preferred method of contact. | Suggested values: `whatsapp`, `phone`, `email`, `instagram`, `showroomVisit`, `noPreference`. |
+| `requestType` | Controlled String | Required | Primary type of design request. | Suggested values: `customFurniture`, `roomPlanning`, `spaceConsultation`, `onSiteMeasurement`, `factoryConsultation`, `renovationSupport`, `generalDesignHelp`. |
+| `spaceDescription` | String | Required | Customer description of the room or space. | Must contain meaningful space context. |
+| `furnitureRequirement` | String | Required | Customer description of required furniture or design outcome. | Must describe the requested furniture need clearly. |
+| `requestStatus` | Controlled String | Required | Business handling status of the request. | Suggested values: `new`, `reviewing`, `contacted`, `consultationScheduled`, `convertedToEnquiry`, `convertedToQuotation`, `closed`. |
+| `status` | Controlled String | Required | Lifecycle status of the record. | Suggested values: `active`, `inactive`, `archived`, `deleted`. |
+| `createdAt` | ISO 8601 Date String | Required | Date and time when the request was created. | Must use ISO 8601 format. |
+| `updatedAt` | ISO 8601 Date String | Required | Date and time when the request was last updated. | Must use ISO 8601 format and update whenever request data changes. |
+
+---
+
+### 4. Optional Fields
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `publicId` | String | Optional | Customer-safe request reference. | Must not expose internal sequencing or sensitive data. |
+| `customerAccountId` | UUID String | Optional | Future reference to a registered Customer Account. | Must reference a valid Customer Account when that entity exists. |
+| `customerSegmentId` | UUID String | Optional | Reference to the customer segment if known. | Must reference a valid Customer Segment when used. |
+| `roomSpaceTypeIds` | Array of UUID Strings | Optional | Room or space types related to the request. | Must reference valid Room / Space Type entities when introduced. |
+| `categoryIds` | Array of UUID Strings | Optional | Furniture Categories relevant to the request. | Must reference valid Category entities. |
+| `collectionIds` | Array of UUID Strings | Optional | Collections that inspired or relate to the request. | Must reference valid Collection entities. |
+| `productIds` | Array of UUID Strings | Optional | Products the customer is interested in. | Must reference valid Product entities. Products must not be embedded. |
+| `productVariantIds` | Array of UUID Strings | Optional | Product Variants the customer is interested in. | Must reference valid Product Variant entities. |
+| `catalogueIds` | Array of UUID Strings | Optional | Catalogues that influenced the request. | Must reference valid Catalogue entities. |
+| `materialIds` | Array of UUID Strings | Optional | Preferred Materials selected or mentioned by the customer. | Must reference valid Material entities. |
+| `finishIds` | Array of UUID Strings | Optional | Preferred Finishes selected or mentioned by the customer. | Must reference valid Finish entities. |
+| `serviceOfferingIds` | Array of UUID Strings | Optional | Service Offerings requested by the customer. | Must reference valid Service Offering entities. |
+| `locationId` | UUID String | Optional | Factory, showroom, or business Location relevant to the request. | Must reference a valid Location when present. |
+| `measurements` | Array of Measurement Objects | Optional | Customer-provided space or furniture measurements. | Must use the shared Measurement value object. |
+| `measurementNotes` | String | Optional | Additional measurement context or uncertainty. | Should clarify customer-provided dimensions without replacing structured measurements. |
+| `siteAddress` | Address Object | Optional | Address where on-site measurement or consultation may be required. | Must use the shared Address value object when provided. |
+| `budgetRange` | Object | Optional | Customer-provided budget range. | Must remain customer intent only and must not become formal quotation pricing. |
+| `preferredTimeline` | String | Optional | Customer's preferred project timeline. | Should be customer-readable and non-binding. |
+| `preferredConsultationDate` | ISO 8601 Date String | Optional | Preferred date for consultation. | Must use ISO 8601 format when present. |
+| `preferredConsultationTimeWindow` | String | Optional | Preferred time window for consultation. | Should not replace future Appointment scheduling. |
+| `isFactoryConsultationRequested` | Boolean | Optional | Indicates whether the customer wants a factory consultation. | Must default to `false` when used. |
+| `isOnSiteMeasurementRequested` | Boolean | Optional | Indicates whether the customer wants on-site measurement. | Must default to `false` when used. |
+| `isDesignConsultationRequested` | Boolean | Optional | Indicates whether the customer wants design consultation. | Must default to `false` when used. |
+| `isQuotationRequested` | Boolean | Optional | Indicates whether the customer wants a quotation. | Must default to `false` when used. |
+| `inspirationMediaReferences` | Array of Media Reference Objects | Optional | Customer inspiration images or reference visuals. | Must use Media Reference value objects instead of direct file paths. |
+| `roomPhotoMediaReferences` | Array of Media Reference Objects | Optional | Customer-uploaded room photos. | Must use Media Reference value objects instead of direct file paths. |
+| `floorPlanMediaReferences` | Array of Media Reference Objects | Optional | Customer-uploaded floor plans, sketches, or layout files. | Must use Media Reference value objects instead of direct file paths. |
+| `additionalMediaReferences` | Array of Media Reference Objects | Optional | Other supporting uploads. | Must use Media Reference value objects instead of direct file paths. |
+| `stylePreferences` | Array of Strings | Optional | Customer style preferences. | Should use customer-readable values such as `minimal`, `luxury`, `modern`, or `warm wood`. |
+| `functionalRequirements` | Array of Strings | Optional | Practical needs such as storage, workspace, display, or accessibility. | Must describe customer requirements, not implementation details. |
+| `specialInstructions` | String | Optional | Additional customer instructions. | Must remain request-specific and customer-provided. |
+| `originContext` | Object | Optional | Context about where the request was created. | May include source page, CTA, campaign, referrer, or device context. |
+| `aiRecommendationContext` | Object | Optional | Future context for AI-assisted recommendations. | Must not store AI model logic or generated recommendations as core data. |
+| `visualizationContext` | Object | Optional | Future context for 3D visualization workflows. | Must not store generated visualization files directly; those should use Media References. |
+| `assignedToUserId` | UUID String | Optional | Future reference to a staff or admin user assigned to the request. | Must reference a valid future user record when introduced. |
+| `internalNotes` | Array of Internal Note Objects | Optional | Business-only notes about follow-up or design context. | Must not be shown publicly. |
+| `generatedEnquiryId` | UUID String | Optional | Enquiry created from this request. | Must reference a valid Enquiry when present. |
+| `convertedAppointmentId` | UUID String | Optional | Future Appointment created from this request. | Must reference a valid Appointment when introduced. |
+| `convertedQuotationId` | UUID String | Optional | Future Quotation created from this request. | Must reference a valid Quotation when introduced. |
+| `lastContactedAt` | ISO 8601 Date String | Optional | Date and time when the customer was last contacted. | Must use ISO 8601 format when present. |
+| `closedAt` | ISO 8601 Date String | Optional | Date and time when the request was closed. | Required when `requestStatus` is `closed`. |
+| `closureReason` | String | Optional | Reason the request was closed. | Should be concise and internal-facing. |
+| `consentInformation` | Object | Optional | Customer consent context for contact or follow-up. | Should capture consent source and timestamp where required. |
+| `metadata` | Object | Optional | Non-critical extensibility data. | Must not contain Product data, Catalogue data, Company data, formal quotation details, or appointment scheduling records. |
+| `isDeleted` | Boolean | Optional | Soft deletion flag. | Must default to `false` when used. |
+| `deletedAt` | ISO 8601 Date String | Optional | Date and time when the request was soft deleted. | Required only when `isDeleted` is `true`. |
+
+---
+
+### Internal Note Object
+
+Internal Note is not a standalone entity at this stage.
+
+It belongs inside Design Your Space Request because it exists only as follow-up or design-planning context for a specific request.
+
+| Name | Data Type | Required or Optional | Description | Validation Rules |
+|---|---|---|---|---|
+| `id` | UUID String | Required | Internal unique identifier for the note. | Must be unique within the Design Your Space Request. |
+| `noteText` | String | Required | Internal note content. | Must not be shown publicly. |
+| `createdAt` | ISO 8601 Date String | Required | Date and time when the note was created. | Must use ISO 8601 format. |
+| `createdByUserId` | UUID String | Optional | Future reference to the staff or admin user who created the note. | Must reference a valid future user record when introduced. |
+| `noteType` | Controlled String | Optional | Type of internal note. | Suggested values: `general`, `designPreference`, `measurement`, `consultation`, `quotation`, `appointment`, `crm`. |
+
+---
+
+### 5. Relationships
+
+- Design Your Space Request belongs to one Company through `companyId`.
+- Design Your Space Request may reference a future Customer Account through `customerAccountId`.
+- Design Your Space Request may reference a Customer Segment through `customerSegmentId`.
+- Design Your Space Request may reference Room / Space Types through `roomSpaceTypeIds`.
+- Design Your Space Request may reference Categories through `categoryIds`.
+- Design Your Space Request may reference Collections through `collectionIds`.
+- Design Your Space Request may reference Products through `productIds`.
+- Design Your Space Request may reference Product Variants through `productVariantIds`.
+- Design Your Space Request may reference Catalogues through `catalogueIds`.
+- Design Your Space Request may reference Materials through `materialIds`.
+- Design Your Space Request may reference Finishes through `finishIds`.
+- Design Your Space Request may reference Service Offerings through `serviceOfferingIds`.
+- Design Your Space Request may reference a Location through `locationId`.
+- Design Your Space Request may reference Media Assets through Media Reference fields.
+- Design Your Space Request may generate an Enquiry through `generatedEnquiryId`.
+- Design Your Space Request may later generate a future Appointment through `convertedAppointmentId`.
+- Design Your Space Request may later generate a future Quotation through `convertedQuotationId`.
+
+Design Your Space Request must not embed Product, Catalogue, Material, Finish, Customer Account, Company, Enquiry, Appointment, or Quotation objects.
+
+---
+
+### 6. Business Rules
+
+- A Design Your Space Request must belong to one Company.
+- A Design Your Space Request must capture at least one valid customer contact method.
+- A Design Your Space Request is not an Enquiry.
+- A Design Your Space Request may generate an Enquiry, Appointment, or Quotation, but those must remain separate entities.
+- Design Your Space Request must own only customer design request information.
+- Products, Product Variants, Catalogues, Materials, Finishes, Categories, and Collections must be referenced using IDs.
+- Customer-uploaded inspiration images, room photos, floor plans, and sketches must use Media References.
+- Measurements must use the shared Measurement value object.
+- Contact information must use the shared Contact Information value object.
+- Site address must use the shared Address value object when provided.
+- If `isOnSiteMeasurementRequested` is `true`, `siteAddress`, `preferredConsultationDate`, or `measurementNotes` should be provided when available.
+- If `isFactoryConsultationRequested` is `true`, `locationId` should be provided when the preferred Location is known.
+- If `isQuotationRequested` is `true`, the request may later create a Quotation, but formal quotation pricing must not be stored in this entity.
+- If `generatedEnquiryId` is present, the referenced Enquiry must remain the source of lead follow-up state.
+- Internal notes must not be shown publicly.
+- `metadata` must not become a hidden place for core design request data.
+- Soft deletion should preserve request history and must not automatically erase related Products, Catalogues, Media Assets, Enquiries, Appointments, or Quotations.
+- Request status must control business handling without replacing Enquiry, Appointment, or Quotation statuses.
+
+---
+
+### 7. Shared Value Objects Used
+
+- Contact Information
+- Address
+- Measurement
+- Media Reference
+
+The Design Your Space Request entity follows the global standards for:
+
+- Entity Identifiers
+- Relationship References
+- Audit Fields
+- Status Fields
+- Metadata Fields
+- Soft Deletion
+
+Design Your Space Request intentionally does not use SEO Metadata because it is a private customer intent record and should not be a public landing page.
+
+---
+
+### 8. Future Expansion
+
+The Design Your Space Request model supports future growth without redesign by allowing:
+
+- Customer Account linking.
+- Enquiry generation.
+- Appointment scheduling.
+- Quotation generation.
+- On-site measurement workflows.
+- Factory consultation workflows.
+- AI room recommendations.
+- 3D visualization workflows.
+- Uploaded floor plans and room photos.
+- Staff assignment.
+- CRM integration.
+- Lead pipeline integration.
+- Customer dashboards.
+- Design history tracking.
+- Future room planner tools.
+- Future portfolio or completed project conversion.
+
+Future entities such as Customer Account, Enquiry, Appointment, Quotation, Staff User, AI Recommendation, Visualization Project, Room Planner Session, Lead Pipeline, CRM Record, and Completed Project can reference Design Your Space Request without changing the core model.
+
+---
+
+### 9. Example JSON
+
+```json
+{
+  "id": "2d9f8c71-4b62-4f91-9e18-7c3a6d41b502",
+  "publicId": "design-request-sfg-2026-001",
+  "companyId": "2a7c91e5-4d8f-4c21-9f62-6e39d8a4f101",
+  "customerName": "A. Naik",
+  "contactInformation": {
+    "phone": "+919876543210",
+    "whatsapp": "+919876543210",
+    "email": "customer@example.com",
+    "preferredContactLabel": "WhatsApp"
+  },
+  "preferredContactMethod": "whatsapp",
+  "customerAccountId": null,
+  "customerSegmentId": "customer-segment-homeowners",
+  "requestType": "customFurniture",
+  "spaceDescription": "Bedroom space requiring a custom wardrobe and storage solution along one wall.",
+  "furnitureRequirement": "Need a 3-door wardrobe with hanging space, shelves, drawers, and a possible mirror section.",
+  "roomSpaceTypeIds": [
+    "room-space-bedroom"
+  ],
+  "categoryIds": [
+    "category-wardrobes"
+  ],
+  "collectionIds": [
+    "collection-sliding-wardrobes"
+  ],
+  "productIds": [
+    "product-verona-sliding-wardrobe"
+  ],
+  "productVariantIds": [
+    "variant-plywood-white-matte-3-door-layout"
+  ],
+  "catalogueIds": [
+    "catalogue-premium-wardrobe-collection"
+  ],
+  "materialIds": [
+    "material-sfg-plywood-premium"
+  ],
+  "finishIds": [
+    "finish-sfg-white-matte",
+    "finish-sfg-walnut-matte"
+  ],
+  "serviceOfferingIds": [
+    "service-custom-furniture-design",
+    "service-on-site-measurement"
+  ],
+  "locationId": "location-sfg-factory-goa",
+  "measurements": [
+    {
+      "label": "Wardrobe Wall",
+      "width": 96,
+      "height": 108,
+      "depth": 24,
+      "unit": "inches"
+    }
+  ],
+  "measurementNotes": "Measurements are approximate. Final dimensions need confirmation during site visit.",
+  "siteAddress": {
+    "addressLine1": "Customer provided address line",
+    "addressLine2": null,
+    "city": "Margao",
+    "state": "Goa",
+    "postalCode": "403601",
+    "country": "India"
+  },
+  "budgetRange": {
+    "minimum": 100000,
+    "maximum": 180000,
+    "currency": "INR"
+  },
+  "preferredTimeline": "Within 6 to 8 weeks",
+  "preferredConsultationDate": "2026-07-16T00:00:00+05:30",
+  "preferredConsultationTimeWindow": "Morning",
+  "isFactoryConsultationRequested": true,
+  "isOnSiteMeasurementRequested": true,
+  "isDesignConsultationRequested": true,
+  "isQuotationRequested": true,
+  "inspirationMediaReferences": [
+    {
+      "mediaAssetId": "media-bedroom-wardrobe-inspiration-001",
+      "mediaType": "image",
+      "altText": "Customer inspiration image for wardrobe design",
+      "displayOrder": 1,
+      "isPrimary": true
+    }
+  ],
+  "roomPhotoMediaReferences": [
+    {
+      "mediaAssetId": "media-customer-bedroom-photo-001",
+      "mediaType": "image",
+      "altText": "Customer uploaded bedroom wall photo",
+      "displayOrder": 1,
+      "isPrimary": true
+    }
+  ],
+  "floorPlanMediaReferences": [
+    {
+      "mediaAssetId": "media-customer-bedroom-layout-001",
+      "mediaType": "image",
+      "altText": "Customer uploaded bedroom layout sketch",
+      "displayOrder": 1,
+      "isPrimary": false
+    }
+  ],
+  "additionalMediaReferences": [],
+  "stylePreferences": [
+    "minimal",
+    "premium",
+    "warm wood"
+  ],
+  "functionalRequirements": [
+    "hanging space",
+    "drawers",
+    "shelf storage",
+    "mirror option"
+  ],
+  "specialInstructions": "Prefer a clean design with easy maintenance and long-lasting material.",
+  "originContext": {
+    "sourcePage": "design-your-space",
+    "sourceCta": "Submit Design Request",
+    "referrer": "collections"
+  },
+  "aiRecommendationContext": {
+    "isEligibleForRecommendations": true,
+    "recommendationStatus": "notStarted"
+  },
+  "visualizationContext": {
+    "isEligibleFor3DVisualization": true,
+    "visualizationStatus": "notStarted"
+  },
+  "assignedToUserId": null,
+  "internalNotes": [
+    {
+      "id": "design-note-001",
+      "noteText": "Customer is interested in plywood wardrobe with matte finish. Site measurement required before quotation.",
+      "createdAt": "2026-07-11T11:00:00+05:30",
+      "createdByUserId": null,
+      "noteType": "measurement"
+    }
+  ],
+  "generatedEnquiryId": null,
+  "convertedAppointmentId": null,
+  "convertedQuotationId": null,
+  "lastContactedAt": null,
+  "closedAt": null,
+  "closureReason": null,
+  "consentInformation": {
+    "hasContactConsent": true,
+    "consentSource": "design-your-space-form",
+    "consentedAt": "2026-07-11T10:55:00+05:30"
+  },
+  "metadata": {},
+  "requestStatus": "new",
+  "status": "active",
+  "createdAt": "2026-07-11T10:55:00+05:30",
+  "updatedAt": "2026-07-11T11:00:00+05:30",
+  "isDeleted": false,
+  "deletedAt": null
+}
+```
 ---
 
 # Relationship Summary
