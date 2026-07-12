@@ -85,18 +85,5 @@ export const homepageContent = {
       description:
         "Discuss measurements, finishes, and ideas directly where custom furniture begins.",
     },
-    address: {
-      line1: "Behind Apollo tiles & Pavers",
-      line2: "Kirbhat Nuvem Salcete",
-      region: "Goa 403601",
-    },
-    openingHours: {
-      days: "Monday to Saturday",
-      hours: "9:30 AM - 7:00 PM",
-      note: "Call before visiting for the best consultation experience.",
-    },
-    directionsHref: "https://maps.app.goo.gl/wE57FuAJSdDiHqr38",
-    mapEmbedSrc:
-      "https://www.google.com/maps?q=Star%20Furniture%20Goa%20Behind%20Apollo%20tiles%20and%20Pavers%20Kirbhat%20Nuvem%20Salcete%20Goa%20403601&output=embed",
   },
 } as const;

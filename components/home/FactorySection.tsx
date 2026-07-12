@@ -17,7 +17,7 @@ import { homepageContent } from "@/data/homepage";
 export function FactorySection() {
   const shouldReduceMotion = useReducedMotion();
   const primaryPhoneNumber = contact.phoneNumbers[0];
-  const addressLine = `${homepageContent.factory.address.line1}, ${homepageContent.factory.address.line2}, ${homepageContent.factory.address.region}`;
+  const addressLine = `${contact.address.line1}, ${contact.address.line2}, ${contact.address.region}`;
 
   const revealProps = shouldReduceMotion
     ? {}
@@ -111,11 +111,11 @@ export function FactorySection() {
                   Address
                 </p>
                 <address className="mt-2 not-italic text-[0.94rem] leading-[1.7] text-[var(--color-cream)]">
-                  {homepageContent.factory.address.line1}
+                  {contact.address.line1}
                   <br />
-                  {homepageContent.factory.address.line2}
+                  {contact.address.line2}
                   <br />
-                  {homepageContent.factory.address.region}
+                  {contact.address.region}
                 </address>
               </div>
 
@@ -129,12 +129,12 @@ export function FactorySection() {
                   Opening Hours
                 </p>
                 <p className="mt-2 text-[0.94rem] leading-[1.7] text-[var(--color-cream)]">
-                  {homepageContent.factory.openingHours.days}
+                  {contact.businessHours.days}
                   <br />
-                  {homepageContent.factory.openingHours.hours}
+                  {contact.businessHours.hours}
                 </p>
                 <p className="mt-2 text-[0.82rem] leading-[1.55] text-[rgba(255,248,238,0.62)]">
-                  {homepageContent.factory.openingHours.note}
+                  {contact.businessHours.note}
                 </p>
               </div>
             </div>
@@ -158,7 +158,7 @@ export function FactorySection() {
               </Button>
               <Button asChild size="lg" variant="outline">
                 <a
-                  href={homepageContent.factory.directionsHref}
+                  href={contact.googleMaps.directionsHref}
                   rel="noreferrer"
                   target="_blank"
                 >
@@ -174,7 +174,7 @@ export function FactorySection() {
                 className="h-[320px] w-full border-0 grayscale-[18%] sm:h-[380px]"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                src={homepageContent.factory.mapEmbedSrc}
+                src={contact.googleMaps.embedSrc}
                 title="Star Furniture Goa factory location map"
               />
             </div>
