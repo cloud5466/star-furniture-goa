@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "motion/react";
 
 import { Button } from "@/components/shared-ui/Button";
 import { routes } from "@/constants/routes";
+import { homepageContent } from "@/data/homepage";
 
 export function CatalogueCTA() {
   const shouldReduceMotion = useReducedMotion();
@@ -27,22 +28,23 @@ export function CatalogueCTA() {
     >
       <div className="mx-auto grid w-full max-w-[1180px] items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(360px,0.72fr)] lg:gap-16">
         <motion.div className="max-w-[680px]" {...revealProps}>
-          <p className="section-kicker mb-4">Explore Our Catalogue</p>
+          <p className="section-kicker mb-4">
+            {homepageContent.catalogueCTA.kicker}
+          </p>
           <h2
             className="font-display text-[2.2rem] font-semibold leading-[1.08] tracking-normal text-[var(--color-cream)] sm:text-[3rem] lg:text-[4.25rem]"
             id="catalogue-cta-title"
           >
-            Browse designs before you build your space.
+            {homepageContent.catalogueCTA.title}
           </h2>
           <p className="mt-6 max-w-[570px] text-[0.98rem] leading-[1.85] text-[rgba(255,248,238,0.76)] sm:text-[1.05rem]">
-            Discover curated furniture ideas, finish options, and made-to-order
-            possibilities from Star Furniture Goa&apos;s catalogue library.
+            {homepageContent.catalogueCTA.description}
           </p>
 
           <div className="mt-8">
             <Button asChild className="group" size="lg">
               <Link href={routes.catalogues}>
-                Explore Catalogues
+                {homepageContent.catalogueCTA.buttonLabel}
                 <ArrowRight
                   aria-hidden="true"
                   className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
@@ -73,17 +75,17 @@ export function CatalogueCTA() {
                 className="object-cover"
                 fill
                 sizes="(max-width: 768px) 86vw, 430px"
-                src="/images/categories/modern-kitchens.webp"
+                src={homepageContent.catalogueCTA.mockup.imageSrc}
               />
               <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.9),rgba(0,0,0,0.22)_50%,rgba(0,0,0,0.08))]" />
             </div>
 
             <div className="absolute inset-x-0 bottom-0 p-6 sm:p-7">
               <p className="font-display text-[1.55rem] font-semibold leading-tight text-[var(--color-cream)] sm:text-[1.9rem]">
-                Star Furniture Goa
+                {homepageContent.catalogueCTA.mockup.title}
               </p>
               <p className="mt-2 text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--color-gold)]">
-                Catalogue Library
+                {homepageContent.catalogueCTA.mockup.label}
               </p>
             </div>
           </div>

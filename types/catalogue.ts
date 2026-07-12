@@ -1,2 +1,2 @@
 // Defines catalogue domain types.
-export interface Catalogue {}
+export type Catalogue = Record<string, never>;

@@ -1,2 +1,2 @@
 // Defines navigation domain types.
-export interface NavigationItem {}
+export type NavigationItem = Record<string, never>;

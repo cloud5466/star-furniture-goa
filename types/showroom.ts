@@ -1,2 +1,2 @@
 // Defines showroom domain types.
-export interface Showroom {}
+export type Showroom = Record<string, never>;

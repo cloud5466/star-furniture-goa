@@ -1,2 +1,2 @@
 // Defines enquiry domain types.
-export interface Enquiry {}
+export type Enquiry = Record<string, never>;

@@ -1,2 +1,1 @@
-// Defines review domain types.
-export interface Review {}
+export type { Review } from "@/data/reviews";

@@ -4,45 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
-const heroSlides = [
-  {
-    src: "/images/hero/star-furniture-hero-1.webp",
-    label: "Premium Furniture",
-    alt: "Premium custom furniture by Star Furniture Goa",
-  },
-  {
-    src: "/images/hero/star-furniture-hero-2.webp",
-    label: "Custom Wardrobes",
-    alt: "Custom wardrobe furniture by Star Furniture Goa",
-  },
-  {
-    src: "/images/hero/star-furniture-hero-3.webp",
-    label: "Modern Kitchens",
-    alt: "Modern kitchen furniture by Star Furniture Goa",
-  },
-  {
-    src: "/images/hero/star-furniture-hero-4.webp",
-    label: "Bedroom Furniture",
-    alt: "Bedroom furniture by Star Furniture Goa",
-  },
-  {
-    src: "/images/hero/star-furniture-hero-5.webp",
-    label: "Office Tables",
-    alt: "Office furniture table by Star Furniture Goa",
-  },
-  {
-    src: "/images/hero/star-furniture-hero-6.webp",
-    label: "TV Units",
-    alt: "TV unit furniture by Star Furniture Goa",
-  },
-  {
-    src: "/images/hero/star-furniture-hero-7.webp",
-    label: "Made-to-Order Interiors",
-    alt: "Made-to-order interior furniture by Star Furniture Goa",
-  },
-] as const;
+import { homepageContent } from "@/data/homepage";
 
 const slideIntervalMs = 5000;
+const heroSlides = homepageContent.hero.slides;
 
 export function Hero() {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
@@ -85,7 +50,7 @@ export function Hero() {
             className="font-display text-[0.92rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)] sm:text-[1.08rem] md:text-[1.22rem] lg:text-[1.42rem]"
             id="home-hero-title"
           >
-            Custom furniture crafted for Goan homes
+            {homepageContent.hero.title}
           </h1>
           <span
             aria-hidden="true"

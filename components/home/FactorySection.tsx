@@ -12,21 +12,12 @@ import { motion, useReducedMotion } from "motion/react";
 
 import { Button } from "@/components/shared-ui/Button";
 import { contact } from "@/data/contact";
-
-const directionsHref = "https://maps.app.goo.gl/wE57FuAJSdDiHqr38";
-const mapEmbedSrc =
-  "https://www.google.com/maps?q=Star%20Furniture%20Goa%20Behind%20Apollo%20tiles%20and%20Pavers%20Kirbhat%20Nuvem%20Salcete%20Goa%20403601&output=embed";
-
-const factoryHours = [
-  "Monday to Saturday",
-  "9:30 AM - 7:00 PM",
-  "Call before visiting for the best consultation experience.",
-] as const;
+import { homepageContent } from "@/data/homepage";
 
 export function FactorySection() {
   const shouldReduceMotion = useReducedMotion();
   const primaryPhoneNumber = contact.phoneNumbers[0];
-  const addressLine = `${contact.address.line1}, ${contact.address.line2}, ${contact.address.region}`;
+  const addressLine = `${homepageContent.factory.address.line1}, ${homepageContent.factory.address.line2}, ${homepageContent.factory.address.region}`;
 
   const revealProps = shouldReduceMotion
     ? {}
@@ -53,7 +44,7 @@ export function FactorySection() {
             className="font-display text-[1rem] font-semibold uppercase tracking-[0.14em] text-[var(--color-gold)] sm:text-[1.18rem] lg:text-[1.45rem]"
             id="factory-section-title"
           >
-            Visit Our Factory
+            {homepageContent.factory.sectionTitle}
           </h2>
           <span
             aria-hidden="true"
@@ -68,11 +59,11 @@ export function FactorySection() {
           >
             <div className="relative aspect-[4/5] min-h-[430px] sm:aspect-[16/12] lg:aspect-auto lg:h-full">
               <Image
-                alt="Custom furniture craftsmanship by Star Furniture Goa"
+                alt={homepageContent.factory.image.alt}
                 className="object-cover"
                 fill
                 sizes="(max-width: 1024px) 100vw, 520px"
-                src="/images/categories/made-to-order-interiors.webp"
+                src={homepageContent.factory.image.src}
               />
               <div
                 aria-hidden="true"
@@ -82,11 +73,10 @@ export function FactorySection() {
 
             <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-7">
               <p className="font-display text-[1.7rem] font-semibold leading-tight text-[var(--color-cream)] sm:text-[2.2rem]">
-                See the craft up close.
+                {homepageContent.factory.imageCallout.title}
               </p>
               <p className="mt-2 max-w-[390px] text-[0.9rem] leading-[1.7] text-[rgba(255,248,238,0.74)]">
-                Discuss measurements, finishes, and ideas directly where custom
-                furniture begins.
+                {homepageContent.factory.imageCallout.description}
               </p>
             </div>
           </motion.div>
@@ -100,14 +90,14 @@ export function FactorySection() {
                 : { duration: 0.62, delay: 0.08, ease: "easeOut" as const }
             }
           >
-            <p className="section-kicker mb-4">Factory Consultation</p>
+            <p className="section-kicker mb-4">
+              {homepageContent.factory.kicker}
+            </p>
             <h3 className="font-display text-[2.1rem] font-semibold leading-[1.08] text-[var(--color-cream)] sm:text-[3rem]">
-              Plan your furniture with the people who make it.
+              {homepageContent.factory.title}
             </h3>
             <p className="mt-5 max-w-[650px] text-[0.98rem] leading-[1.82] text-[rgba(255,248,238,0.74)] sm:text-[1.04rem]">
-              Visit our factory to discuss your furniture requirements, explore
-              material and finish possibilities, and experience the craftsmanship
-              behind Star Furniture Goa in person.
+              {homepageContent.factory.description}
             </p>
 
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
@@ -121,11 +111,11 @@ export function FactorySection() {
                   Address
                 </p>
                 <address className="mt-2 not-italic text-[0.94rem] leading-[1.7] text-[var(--color-cream)]">
-                  {contact.address.line1}
+                  {homepageContent.factory.address.line1}
                   <br />
-                  {contact.address.line2}
+                  {homepageContent.factory.address.line2}
                   <br />
-                  {contact.address.region}
+                  {homepageContent.factory.address.region}
                 </address>
               </div>
 
@@ -139,12 +129,12 @@ export function FactorySection() {
                   Opening Hours
                 </p>
                 <p className="mt-2 text-[0.94rem] leading-[1.7] text-[var(--color-cream)]">
-                  {factoryHours[0]}
+                  {homepageContent.factory.openingHours.days}
                   <br />
-                  {factoryHours[1]}
+                  {homepageContent.factory.openingHours.hours}
                 </p>
                 <p className="mt-2 text-[0.82rem] leading-[1.55] text-[rgba(255,248,238,0.62)]">
-                  {factoryHours[2]}
+                  {homepageContent.factory.openingHours.note}
                 </p>
               </div>
             </div>
@@ -167,7 +157,11 @@ export function FactorySection() {
                 </a>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <a href={directionsHref} rel="noreferrer" target="_blank">
+                <a
+                  href={homepageContent.factory.directionsHref}
+                  rel="noreferrer"
+                  target="_blank"
+                >
                   <Navigation aria-hidden="true" className="h-4 w-4" />
                   Get Directions
                 </a>
@@ -180,7 +174,7 @@ export function FactorySection() {
                 className="h-[320px] w-full border-0 grayscale-[18%] sm:h-[380px]"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                src={mapEmbedSrc}
+                src={homepageContent.factory.mapEmbedSrc}
                 title="Star Furniture Goa factory location map"
               />
             </div>

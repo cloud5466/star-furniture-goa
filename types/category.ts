@@ -1,2 +1,2 @@
 // Defines category domain types.
-export interface Category {}
+export type Category = Record<string, never>;

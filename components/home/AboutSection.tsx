@@ -4,20 +4,9 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 import { Armchair, Ruler, Wrench } from "lucide-react";
 
-const aboutHighlights = [
-  {
-    label: "Custom measurements",
-    icon: Ruler,
-  },
-  {
-    label: "Home and office furniture",
-    icon: Armchair,
-  },
-  {
-    label: "Delivery and installation",
-    icon: Wrench,
-  },
-] as const;
+import { homepageContent } from "@/data/homepage";
+
+const aboutHighlightIcons = [Ruler, Armchair, Wrench] as const;
 
 export function AboutSection() {
   const shouldReduceMotion = useReducedMotion();
@@ -39,38 +28,20 @@ export function AboutSection() {
     >
       <div className="mx-auto grid w-full max-w-[1180px] items-stretch gap-8 md:grid-cols-[minmax(0,1fr)_minmax(280px,390px)] lg:gap-16">
         <motion.div className="min-w-0" {...revealProps}>
-          <p className="section-kicker mb-4">About Us</p>
+          <p className="section-kicker mb-4">
+            {homepageContent.about.kicker}
+          </p>
           <h2
             className="max-w-[720px] font-display text-[2rem] font-semibold leading-[1.08] tracking-normal text-[var(--color-ink)] sm:text-[2.8rem] lg:text-[4rem]"
             id="about-star-furniture-title"
           >
-            Where quality meets credibility.
+            {homepageContent.about.title}
           </h2>
 
           <div className="mt-6 grid max-w-[680px] gap-5 text-[0.96rem] leading-[1.82] text-[#3e352d] sm:text-[1.02rem] lg:text-[1.08rem]">
-            <p>
-              Welcome to STAR FURNITURE GOA, proudly serving customers since
-              2006 and recognized as one of Goa&apos;s trusted manufacturers,
-              wholesalers, and retailers of bespoke furniture.
-            </p>
-            <p>
-              We specialize in premium engineered wood and plywood furniture for
-              homes, offices, and commercial spaces, combining style,
-              functionality, durability, and affordability in every piece we
-              create.
-            </p>
-            <p>
-              With years of experience and a strong commitment to craftsmanship,
-              we design customized furniture solutions around your needs,
-              preferences, and vision. Customer satisfaction is at the heart of
-              everything we do.
-            </p>
-            <p>
-              For complete peace of mind, we offer up to 10 years warranty on
-              engineered wood furniture and up to 25 years warranty on plywood
-              furniture. At STAR FURNITURE GOA, we do not just create furniture;
-              we create spaces that feel like home.
-            </p>
+            {homepageContent.about.paragraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
           </div>
         </motion.div>
 
@@ -89,11 +60,11 @@ export function AboutSection() {
           />
           <div className="relative z-10 h-full overflow-hidden rounded-[6px] shadow-[0_22px_60px_rgba(25,25,25,0.16)]">
             <Image
-              alt="Star Furniture Goa proprietor at the showroom"
+              alt={homepageContent.about.image.alt}
               className="object-cover object-[51%_45%]"
               fill
               sizes="(max-width: 768px) 340px, 390px"
-              src="/images/showroom/proprietor-about.png"
+              src={homepageContent.about.image.src}
             />
           </div>
         </motion.div>
@@ -107,13 +78,13 @@ export function AboutSection() {
               : { duration: 0.55, delay: 0.14, ease: "easeOut" as const }
           }
         >
-          {aboutHighlights.map((item) => {
-            const Icon = item.icon;
+          {homepageContent.about.highlights.map((label, index) => {
+            const Icon = aboutHighlightIcons[index];
 
             return (
               <div
                 className="flex min-h-[112px] flex-col justify-between gap-4 rounded-[8px] border border-[rgba(25,25,25,0.14)] bg-[rgba(255,248,238,0.36)] p-4"
-                key={item.label}
+                key={label}
               >
                 <Icon
                   aria-hidden="true"
@@ -121,7 +92,7 @@ export function AboutSection() {
                   strokeWidth={1.8}
                 />
                 <p className="text-[0.9rem] font-semibold leading-[1.35] text-[#322a24]">
-                  {item.label}
+                  {label}
                 </p>
               </div>
             );

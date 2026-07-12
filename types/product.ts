@@ -1,2 +1,2 @@
 // Defines product domain types.
-export interface Product {}
+export type Product = Record<string, never>;
