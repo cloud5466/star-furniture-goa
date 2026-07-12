@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Cinzel, Inter } from "next/font/google";
+import { Cinzel, Poppins } from "next/font/google";
 
 import { PageShell } from "@/components/layout/PageShell";
 import { site } from "@/constants/site";
 
 import "./globals.css";
 
-const inter = Inter({
+const poppins = Poppins({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-poppins",
+  weight: ["300", "400", "500", "600"],
   display: "swap",
 });
 
@@ -36,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${cinzel.variable}`}>
+      <body className={`${poppins.variable} ${cinzel.variable}`}>
         <PageShell>{children}</PageShell>
       </body>
     </html>

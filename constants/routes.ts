@@ -1,6 +1,6 @@
 export const routes = {
   home: "/",
-  about: "/about",
+  about: "/#about-star-furniture",
   collections: "/collections",
   catalogues: "/catalogues",
   contact: "/contact",
@@ -11,7 +11,6 @@ export const routes = {
 
 export const primaryNavigation = [
   { label: "Home", href: routes.home },
-  { label: "About Us", href: routes.about },
   { label: "Our Collections", href: routes.collections },
   { label: "Catalogues", href: routes.catalogues },
   { label: "Contact", href: routes.contact },
