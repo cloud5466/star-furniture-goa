@@ -9,10 +9,11 @@ import {
 } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Heart, Menu, MessageCircle, X } from "lucide-react";
+import { Menu, MessageCircle, X } from "lucide-react";
 
+import { AuthNav } from "@/components/auth/AuthNav";
 import { BrandLockup } from "@/components/layout/BrandLockup";
-import { primaryNavigation, routes } from "@/constants/routes";
+import { primaryNavigation } from "@/constants/routes";
 import { contact } from "@/data/contact";
 
 export function MobileNav() {
@@ -155,14 +156,7 @@ export function MobileNav() {
               </nav>
 
               <div className="mt-auto grid gap-3 border-t border-[rgba(212,160,60,0.24)] pt-5">
-                <Link
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-[6px] border border-[rgba(212,160,60,0.45)] text-sm font-semibold text-[var(--color-cream)] transition-colors duration-200 hover:border-[var(--color-gold)] hover:bg-[rgba(212,160,60,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]"
-                  href={routes.wishlist}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Heart aria-hidden="true" className="h-5 w-5" />
-                  Wishlist
-                </Link>
+                <AuthNav mobile onNavigate={() => setIsOpen(false)} />
                 <Link
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-[6px] bg-[var(--color-gold)] text-sm font-bold uppercase tracking-[0.1em] text-[var(--color-bg-dark)] transition-colors duration-200 hover:bg-[var(--color-gold-dark)] hover:text-[var(--color-cream)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]"
                   href={contact.whatsappHref}

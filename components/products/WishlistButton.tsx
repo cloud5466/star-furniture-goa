@@ -4,40 +4,16 @@ import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 
 import { Button } from "@/components/shared-ui/Button";
-
-interface WishlistProduct {
-  id: string;
-  slug: string;
-  name: string;
-  category: string;
-  image: string;
-  shortDescription: string;
-}
+import {
+  readGuestWishlist,
+  type WishlistProduct,
+  writeGuestWishlist,
+} from "@/lib/wishlist";
 
 interface WishlistButtonProps {
   product: WishlistProduct;
   saveLabel: string;
   savedLabel: string;
-}
-
-const wishlistStorageKey = "star-furniture-goa:wishlist";
-
-function readWishlist(): WishlistProduct[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  const storedWishlist = window.localStorage.getItem(wishlistStorageKey);
-
-  if (!storedWishlist) {
-    return [];
-  }
-
-  try {
-    return JSON.parse(storedWishlist) as WishlistProduct[];
-  } catch {
-    return [];
-  }
 }
 
 export function WishlistButton({
@@ -49,22 +25,21 @@ export function WishlistButton({
 
   useEffect(() => {
     setIsSaved(
-      readWishlist().some((wishlistProduct) => wishlistProduct.id === product.id),
+      readGuestWishlist().some(
+        (wishlistProduct) => wishlistProduct.id === product.id,
+      ),
     );
   }, [product.id]);
 
   function handleToggleWishlist() {
-    const currentWishlist = readWishlist();
+    const currentWishlist = readGuestWishlist();
     const nextWishlist = isSaved
       ? currentWishlist.filter(
           (wishlistProduct) => wishlistProduct.id !== product.id,
         )
       : [...currentWishlist, product];
 
-    window.localStorage.setItem(
-      wishlistStorageKey,
-      JSON.stringify(nextWishlist),
-    );
+    writeGuestWishlist(nextWishlist);
     setIsSaved(!isSaved);
   }
 

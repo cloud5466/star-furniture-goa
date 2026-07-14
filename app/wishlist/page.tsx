@@ -1,4 +1,38 @@
-// Defines the wishlist route.
+import type { Metadata } from "next";
+
+import { Breadcrumb } from "@/components/category/Breadcrumb";
+import { WishlistClient } from "@/components/wishlist/WishlistClient";
+
+export const metadata: Metadata = {
+  title: "Wishlist",
+  description:
+    "Review your saved Star Furniture Goa products and continue planning your furniture project.",
+};
+
 export default function WishlistPage() {
-  return null;
+  return (
+    <>
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Wishlist" },
+        ]}
+      />
+
+      <section className="bg-[var(--color-bg-dark)] px-4 pb-8 pt-6 text-[var(--color-cream)] sm:px-6 lg:px-10 lg:pb-10 xl:px-14">
+        <div className="mx-auto w-full max-w-[1280px]">
+          <p className="section-kicker mb-4">Saved Furniture</p>
+          <h1 className="font-display text-[2.6rem] font-semibold leading-[1.04] tracking-normal text-[var(--color-cream)] sm:text-[4rem] lg:text-[5.2rem]">
+            My Wishlist
+          </h1>
+          <p className="mt-6 max-w-[760px] text-[1rem] leading-[1.85] text-[rgba(255,248,238,0.74)] sm:text-[1.08rem]">
+            Keep track of favourite furniture designs and return to them when
+            you are ready to enquire.
+          </p>
+        </div>
+      </section>
+
+      <WishlistClient />
+    </>
+  );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Cinzel, Poppins } from "next/font/google";
 
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { PageShell } from "@/components/layout/PageShell";
 import { site } from "@/constants/site";
 
@@ -38,7 +39,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} ${cinzel.variable}`}>
-        <PageShell>{children}</PageShell>
+        <AuthProvider>
+          <PageShell>{children}</PageShell>
+        </AuthProvider>
       </body>
     </html>
   );
