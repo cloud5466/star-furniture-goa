@@ -6,7 +6,6 @@ export const routes = {
   contact: "/contact",
   wishlist: "/wishlist",
   designYourSpace: "/design-your-space",
-  factory: "/showroom",
 } as const;
 
 export const primaryNavigation = [
@@ -22,7 +21,6 @@ export const footerNavigation = [
   { label: "Our Collections", href: routes.collections },
   { label: "Catalogues", href: routes.catalogues },
   { label: "Design Your Space", href: routes.designYourSpace },
-  { label: "Factory", href: routes.factory },
   { label: "Contact", href: routes.contact },
   { label: "Wishlist", href: routes.wishlist },
 ] as const;

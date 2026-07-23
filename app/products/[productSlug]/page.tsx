@@ -89,6 +89,9 @@ export async function generateMetadata({
   return {
     title: page.product.name,
     description: page.product.shortDescription,
+    alternates: {
+      canonical: `/products/${page.product.slug}`,
+    },
   };
 }
 

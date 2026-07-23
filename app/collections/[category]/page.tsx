@@ -32,7 +32,12 @@ export async function generateMetadata({
     };
   }
 
-  return page.metadata;
+  return {
+    ...page.metadata,
+    alternates: {
+      canonical: `/collections/${page.slug}`,
+    },
+  };
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {

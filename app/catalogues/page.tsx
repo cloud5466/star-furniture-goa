@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: "Catalogues",
   description:
     "Download Star Furniture Goa furniture catalogues for wardrobes, TV units, beds, dining, office furniture, and modular kitchens.",
+  alternates: {
+    canonical: "/catalogues",
+  },
 };
 
 export default function CataloguesPage() {

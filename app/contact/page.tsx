@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   title: "Contact Us",
   description:
     "Contact Star Furniture Goa, visit the factory, get directions, or start a custom furniture project.",
+  alternates: {
+    canonical: "/contact",
+  },
 };
 
 export default function ContactPage() {

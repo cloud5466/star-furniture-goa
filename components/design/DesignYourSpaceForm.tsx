@@ -54,8 +54,28 @@ export function DesignYourSpaceForm({ content }: DesignYourSpaceFormProps) {
     phone: "",
     email: "",
   });
+  const [contactErrors, setContactErrors] = useState<
+    Partial<Record<keyof ContactDetailsValue, string>>
+  >({});
 
   function handleStartProject() {
+    const nextContactErrors: Partial<Record<keyof ContactDetailsValue, string>> =
+      {};
+
+    if (!contactDetails.name.trim()) {
+      nextContactErrors.name = "Please enter your name.";
+    }
+
+    if (!contactDetails.phone.trim()) {
+      nextContactErrors.phone = "Please enter your phone number.";
+    }
+
+    setContactErrors(nextContactErrors);
+
+    if (Object.keys(nextContactErrors).length > 0) {
+      return;
+    }
+
     const message = [
       "Hello Star Furniture Goa,",
       "",
@@ -131,8 +151,20 @@ export function DesignYourSpaceForm({ content }: DesignYourSpaceFormProps) {
             value={requirements}
           />
           <ContactForm
+            errors={contactErrors}
             kicker={content.contact.kicker}
-            onChange={setContactDetails}
+            onChange={(nextContactDetails) => {
+              setContactDetails(nextContactDetails);
+              setContactErrors((currentErrors) => ({
+                ...currentErrors,
+                name: nextContactDetails.name.trim()
+                  ? undefined
+                  : currentErrors.name,
+                phone: nextContactDetails.phone.trim()
+                  ? undefined
+                  : currentErrors.phone,
+              }));
+            }}
             value={contactDetails}
           />
           <ConsultationCTA

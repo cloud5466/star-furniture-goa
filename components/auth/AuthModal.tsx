@@ -1,6 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { Mail, X } from "lucide-react";
@@ -21,11 +27,65 @@ export function AuthModal({
   callbackUrl = "/",
   guestHref,
 }: AuthModalProps) {
+  const titleId = useId();
+  const descriptionId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
   const [emailNotice, setEmailNotice] = useState(false);
   const transition = shouldReduceMotion
     ? { duration: 0 }
     : { duration: 0.22, ease: "easeOut" as const };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previousActiveElementRef.current = document.activeElement as HTMLElement;
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.setTimeout(() => {
+      const firstFocusableElement =
+        dialogRef.current?.querySelector<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+
+      firstFocusableElement?.focus();
+    }, 0);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      previousActiveElementRef.current?.focus();
+    };
+  }, [isOpen, onClose]);
+
+  function handleDialogKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "Tab") return;
+
+    const focusableElements = dialogRef.current?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+
+    if (!focusableElements?.length) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+    }
+
+    if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -38,15 +98,20 @@ export function AuthModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
+            tabIndex={-1}
             transition={transition}
             type="button"
           />
           <motion.div
+            aria-describedby={descriptionId}
+            aria-labelledby={titleId}
             aria-modal="true"
             className="relative w-full max-w-[460px] rounded-[8px] border border-[rgba(212,160,60,0.32)] bg-[var(--color-bg-dark)] p-6 text-[var(--color-cream)] shadow-[0_34px_100px_rgba(0,0,0,0.55)]"
             initial={shouldReduceMotion ? false : { opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+            onKeyDown={handleDialogKeyDown}
+            ref={dialogRef}
             role="dialog"
             transition={transition}
           >
@@ -60,12 +125,18 @@ export function AuthModal({
             </button>
 
             <p className="section-kicker mb-4">Customer Account</p>
-            <h2 className="max-w-[340px] font-display text-[2rem] font-semibold leading-[1.08] text-[var(--color-cream)]">
-              Save your favourite furniture across all your devices.
+            <h2
+              className="max-w-[340px] font-display text-[2rem] font-semibold leading-[1.08] text-[var(--color-cream)]"
+              id={titleId}
+            >
+              Save favourites while you browse.
             </h2>
-            <p className="mt-4 text-sm leading-6 text-[rgba(255,248,238,0.68)]">
-              Sign in to keep your wishlist synced. You can also continue as a
-              guest and use this device only.
+            <p
+              className="mt-4 text-sm leading-6 text-[rgba(255,248,238,0.68)]"
+              id={descriptionId}
+            >
+              Wishlist items currently stay on this device. Sign in is available
+              for your customer account, or you can continue as a guest.
             </p>
 
             <div className="mt-7 grid gap-3">

@@ -1,4 +1,5 @@
-// Defines the dynamic catalogue route.
+import { redirect } from "next/navigation";
+
 export default function CataloguePage() {
-  return null;
+  redirect("/catalogues");
 }

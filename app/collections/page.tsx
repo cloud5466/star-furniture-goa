@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "Our Collections",
   description:
     "Explore custom wardrobes, modular kitchens, bedroom furniture, TV units, office furniture, and made-to-order interiors by Star Furniture Goa.",
+  alternates: {
+    canonical: "/collections",
+  },
 };
 
 export default function CollectionsPage() {

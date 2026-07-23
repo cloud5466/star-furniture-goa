@@ -43,7 +43,7 @@ export const homepageContent = {
     kicker: "About Us",
     title: "Where quality meets credibility.",
     image: {
-      src: "/images/showroom/proprietor-about.png",
+      src: "/images/showroom/proprietor-about.webp",
       alt: "Star Furniture Goa proprietor at the showroom",
     },
     paragraphs: [

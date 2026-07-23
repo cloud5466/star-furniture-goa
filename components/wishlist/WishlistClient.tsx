@@ -29,7 +29,7 @@ export function WishlistClient() {
             <span className="font-semibold text-[var(--color-gold)]">
               {session?.user?.name ?? "Customer"}
             </span>
-            . Database wishlist sync is prepared for the account experience.
+            . Wishlist items shown here are currently saved on this device.
           </div>
         ) : null}
 

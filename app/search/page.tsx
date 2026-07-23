@@ -1,4 +1,5 @@
-// Defines the search route.
+import { redirect } from "next/navigation";
+
 export default function SearchPage() {
-  return null;
+  redirect("/collections");
 }

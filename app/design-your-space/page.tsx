@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Design Your Space",
   description:
     "Start a custom furniture project with Star Furniture Goa by sharing your furniture category, inspiration, room details, and contact information.",
+  alternates: {
+    canonical: "/design-your-space",
+  },
 };
 
 export default function DesignYourSpacePage() {
