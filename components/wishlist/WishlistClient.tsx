@@ -1,39 +1,86 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { ArrowRight, Heart } from "lucide-react";
 
 import { Button } from "@/components/shared-ui/Button";
 import { routes } from "@/constants/routes";
-import { readGuestWishlist, type WishlistProduct } from "@/lib/wishlist";
+import { getAllCategoryProducts } from "@/data/categoryPages";
+import { useAuth } from "@/hooks/useAuth";
+import { useWishlist } from "@/hooks/useWishlist";
+import type { WishlistProduct } from "@/lib/wishlist";
+
+const allProducts = getAllCategoryProducts();
+
+function getWishlistProducts({
+  guestProducts,
+  productIds,
+  isAuthenticated,
+}: {
+  guestProducts: WishlistProduct[];
+  productIds: string[];
+  isAuthenticated: boolean;
+}) {
+  if (!isAuthenticated) {
+    return guestProducts;
+  }
+
+  return productIds
+    .map((productId) => {
+      const match = allProducts.find(
+        ({ product }) => product.id === productId,
+      )?.product;
+
+      if (!match) {
+        return null;
+      }
+
+      return {
+        id: match.id,
+        slug: match.slug,
+        name: match.name,
+        category: match.category,
+        image: match.image,
+        shortDescription: match.shortDescription,
+      };
+    })
+    .filter((product): product is WishlistProduct => Boolean(product));
+}
 
 export function WishlistClient() {
-  const { data: session } = useSession();
-  const [products, setProducts] = useState<WishlistProduct[]>([]);
-
-  useEffect(() => {
-    setProducts(readGuestWishlist());
-  }, []);
-
-  const isSignedIn = Boolean(session?.user);
+  const { user, isAuthenticated } = useAuth();
+  const { error, guestProducts, isLoading, productIds } = useWishlist();
+  const products = getWishlistProducts({
+    guestProducts,
+    productIds,
+    isAuthenticated,
+  });
 
   return (
     <section className="bg-[var(--color-bg-dark)] px-4 pb-16 pt-4 text-[var(--color-cream)] sm:px-6 lg:px-10 lg:pb-20 xl:px-14">
       <div className="mx-auto w-full max-w-[1280px]">
-        {isSignedIn ? (
+        {isAuthenticated ? (
           <div className="mb-8 rounded-[8px] border border-[rgba(212,160,60,0.24)] bg-[rgba(255,248,238,0.04)] p-4 text-sm leading-6 text-[rgba(255,248,238,0.72)]">
             Signed in as{" "}
             <span className="font-semibold text-[var(--color-gold)]">
-              {session?.user?.name ?? "Customer"}
+              {user?.displayName ?? "Customer"}
             </span>
-            . Wishlist items shown here are currently saved on this device.
+            . Wishlist items shown here are saved to your customer account.
           </div>
         ) : null}
 
-        {products.length > 0 ? (
+        {error ? (
+          <div className="mb-8 rounded-[8px] border border-[rgba(212,160,60,0.24)] bg-[rgba(255,248,238,0.04)] p-4 text-sm leading-6 text-[var(--color-gold)]">
+            {error}
+          </div>
+        ) : null}
+
+        {isLoading ? (
+          <div className="rounded-[8px] border border-[rgba(212,160,60,0.24)] bg-[rgba(255,248,238,0.035)] px-6 py-12 text-center text-sm text-[rgba(255,248,238,0.68)]">
+            Loading your wishlist...
+          </div>
+        ) : products.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
               <article

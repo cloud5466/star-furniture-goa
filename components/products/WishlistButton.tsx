@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 
 import { Button } from "@/components/shared-ui/Button";
-import {
-  readGuestWishlist,
-  type WishlistProduct,
-  writeGuestWishlist,
-} from "@/lib/wishlist";
+import { useWishlist } from "@/hooks/useWishlist";
+import type { WishlistProduct } from "@/lib/wishlist";
 
 interface WishlistButtonProps {
   product: WishlistProduct;
@@ -21,41 +17,30 @@ export function WishlistButton({
   saveLabel,
   savedLabel,
 }: WishlistButtonProps) {
-  const [isSaved, setIsSaved] = useState(false);
-
-  useEffect(() => {
-    setIsSaved(
-      readGuestWishlist().some(
-        (wishlistProduct) => wishlistProduct.id === product.id,
-      ),
-    );
-  }, [product.id]);
-
-  function handleToggleWishlist() {
-    const currentWishlist = readGuestWishlist();
-    const nextWishlist = isSaved
-      ? currentWishlist.filter(
-          (wishlistProduct) => wishlistProduct.id !== product.id,
-        )
-      : [...currentWishlist, product];
-
-    writeGuestWishlist(nextWishlist);
-    setIsSaved(!isSaved);
-  }
+  const { error, isLoading, isProductSaved, toggleProduct } = useWishlist();
+  const isSaved = isProductSaved(product.id);
 
   return (
-    <Button
-      aria-pressed={isSaved}
-      onClick={handleToggleWishlist}
-      size="lg"
-      type="button"
-      variant={isSaved ? "primary" : "outline"}
-    >
-      <Heart
-        aria-hidden="true"
-        className={isSaved ? "h-4 w-4 fill-current" : "h-4 w-4"}
-      />
-      {isSaved ? savedLabel : saveLabel}
-    </Button>
+    <div className="grid gap-2">
+      <Button
+        aria-pressed={isSaved}
+        disabled={isLoading}
+        onClick={() => {
+          void toggleProduct(product);
+        }}
+        size="lg"
+        type="button"
+        variant={isSaved ? "primary" : "outline"}
+      >
+        <Heart
+          aria-hidden="true"
+          className={isSaved ? "h-4 w-4 fill-current" : "h-4 w-4"}
+        />
+        {isSaved ? savedLabel : saveLabel}
+      </Button>
+      {error ? (
+        <p className="text-xs leading-5 text-[var(--color-gold)]">{error}</p>
+      ) : null}
+    </div>
   );
 }

@@ -34,3 +34,11 @@ export function readGuestWishlist(): WishlistProduct[] {
 export function writeGuestWishlist(products: WishlistProduct[]) {
   window.localStorage.setItem(wishlistStorageKey, JSON.stringify(products));
 }
+
+export function clearGuestWishlist() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(wishlistStorageKey);
+}

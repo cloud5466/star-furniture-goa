@@ -8,11 +8,12 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Mail, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { Button } from "@/components/shared-ui/Button";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -27,12 +28,15 @@ export function AuthModal({
   callbackUrl = "/",
   guestHref,
 }: AuthModalProps) {
+  const router = useRouter();
+  const { error: authError, clearError, signInWithGoogle } = useAuth();
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousActiveElementRef = useRef<HTMLElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
   const [emailNotice, setEmailNotice] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const transition = shouldReduceMotion
     ? { duration: 0 }
     : { duration: 0.22, ease: "easeOut" as const };
@@ -41,6 +45,8 @@ export function AuthModal({
     if (!isOpen) return;
 
     previousActiveElementRef.current = document.activeElement as HTMLElement;
+    clearError();
+    setEmailNotice(false);
 
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -62,7 +68,7 @@ export function AuthModal({
       window.removeEventListener("keydown", handleKeyDown);
       previousActiveElementRef.current?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [clearError, isOpen, onClose]);
 
   function handleDialogKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
     if (event.key !== "Tab") return;
@@ -141,8 +147,20 @@ export function AuthModal({
 
             <div className="mt-7 grid gap-3">
               <Button
+                disabled={isSigningIn}
                 onClick={() => {
-                  void signIn("google", { callbackUrl });
+                  setIsSigningIn(true);
+                  void signInWithGoogle()
+                    .then(() => {
+                      onClose();
+                      router.push(callbackUrl);
+                    })
+                    .catch(() => {
+                      // The auth hook owns the user-facing error message.
+                    })
+                    .finally(() => {
+                      setIsSigningIn(false);
+                    });
                 }}
                 size="lg"
                 type="button"
@@ -153,7 +171,7 @@ export function AuthModal({
                 >
                   G
                 </span>
-                Continue with Google
+                {isSigningIn ? "Signing In..." : "Continue with Google"}
               </Button>
               <Button
                 onClick={() => setEmailNotice(true)}
@@ -179,8 +197,13 @@ export function AuthModal({
 
             {emailNotice ? (
               <p className="mt-4 rounded-[8px] border border-[rgba(212,160,60,0.22)] bg-[rgba(255,248,238,0.04)] p-3 text-xs leading-5 text-[rgba(255,248,238,0.68)]">
-                Email sign-in is prepared in the architecture and can be enabled
-                when email delivery is configured.
+                Email sign-in is not enabled in Firebase yet. Please use Google
+                sign-in or continue as a guest.
+              </p>
+            ) : null}
+            {authError ? (
+              <p className="mt-4 rounded-[8px] border border-[rgba(212,160,60,0.22)] bg-[rgba(255,248,238,0.04)] p-3 text-xs leading-5 text-[var(--color-gold)]">
+                {authError}
               </p>
             ) : null}
           </motion.div>
